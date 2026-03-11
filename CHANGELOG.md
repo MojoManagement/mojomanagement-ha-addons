@@ -1,8 +1,13 @@
 # Changelog
 
-## 0.1.0-beta.1
+## Unreleased
 
-- Fix CI install failure by using `yt-cast-receiver` npm `latest` tag instead of non-existent `^2.3.0`.
-- Initial open-source repo structure.
-- Modularized bridge implementation (discovery, supervisor, receiver, resolver, state store).
-- Added health endpoint, docs, scripts, CI workflow, and notices.
+- _No changes yet._
+
+## 0.9.0
+
+- Reworked root README to reflect this project as a Home Assistant add-on repository.
+- Documented add-on listing explicitly as one included add-on (`yt-cast-audio-bridge`).
+- Rewrote add-on README to focus on add-on behavior, install context, and HA networking expectations.
+- Set the `yt_cast_audio_bridge` add-on release version to `0.9.0`.
+- Removed repository package versioning from the root workspace manifest (`package.json`), so versioning stays add-on scoped.

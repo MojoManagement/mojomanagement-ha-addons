@@ -1,6 +1,6 @@
 {
   "name": "yt-cast-audio-bridge",
-  "version": "0.1.0-beta.1",
+  "version": "0.9.0",
   "description": "Virtual YouTube receivers that forward playback to Cast audio devices.",
   "type": "module",
   "bin": {

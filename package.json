@@ -1,7 +1,6 @@
 {
   "name": "yt-cast-audio-bridge-repo",
   "private": true,
-  "version": "0.1.0-beta.1",
   "description": "Monorepo wrapper for yt-cast-audio-bridge",
   "workspaces": [
     "yt-cast-audio-bridge/app"

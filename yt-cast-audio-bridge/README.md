@@ -1,63 +1,38 @@
-# YT Cast Audio Bridge Home Assistant Add-on
+# YT Cast Audio Bridge (Home Assistant Add-on)
 
-This folder packages the bridge as a Home Assistant add-on.
+This folder defines the **single add-on** contained in this repository.
 
-## Runtime behavior
+- Add-on name: `YT Cast Audio Bridge`
+- Slug: `yt_cast_audio_bridge`
+- Definition file: [`config.yaml`](./config.yaml)
 
-- Primary target: Home Assistant Supervisor add-on runtime.
-- Uses host networking for Cast discovery.
-- Reads options from `/data/options.json` and maps to bridge environment variables.
-- Persists state to `/data/yt-cast-audio-bridge/state/bridge-state.json`.
+## What this add-on does
 
-## Development
+The add-on creates virtual YouTube Cast receivers and forwards playback to discovered Cast audio devices on your LAN.
 
-For local development, use the repository root app directly:
+## Home Assistant behavior
+
+- Runs with `host_network: true` (required for Cast discovery).
+- Reads options from `/data/options.json`.
+- Starts the bridge via [`rootfs/usr/local/bin/run-bridge.sh`](./rootfs/usr/local/bin/run-bridge.sh).
+- Exposes health status on `/healthz` (default port `3099`).
+
+## Important networking notes
+
+- No add-on web UI is provided.
+- mDNS (`5353/udp`) and SSDP (`1900/udp`) must be reachable between phone/client and Home Assistant host.
+- DIAL receiver ports (`DIAL_BASE_PORT` range, default `3000-3024`) must be reachable from client VLAN/subnet.
+
+If devices are not visible in YouTube, check [`../docs/troubleshooting.md`](../docs/troubleshooting.md).
+
+## Local development
+
+The packaged add-on runs the same Node.js app as local development in `app/`.
+
+From repository root:
 
 ```bash
 npm install
 cp .env.example .env
 npm start
 ```
-
-`npm start` and the add-on run the same application code (`app/src/index.mjs`).
-The add-on wrapper (`rootfs/usr/local/bin/run-bridge.sh`) only maps Home Assistant options into environment variables (including `DIAL_BIND_TO_ADDRESSES` and `DIAL_BIND_TO_INTERFACES`) and then starts Node.
-
-For local `npm start`, set the same variables in `.env` if you want to force a specific listener IP/interface.
-
-## Home Assistant notes
-
-### Netzwerk-/Port-Konfiguration (Home Assistant)
-
-- Es gibt **keine** Add-on-Weboberfläche. Das ist normal.
-- Das Add-on läuft mit `host_network: true`; deshalb werden keine klassischen Docker-`ports:`-Mappings für DIAL benötigt.
-- Relevante Ports:
-  - UDP `5353` mDNS (Discovery)
-  - UDP `1900` SSDP/DIAL Discovery
-  - TCP `DIAL_BASE_PORT` bis `DIAL_BASE_PORT + MAX_RECEIVERS - 1` (Standard `3000-3024` bei `max_receivers: 25`)
-  - TCP `HEALTH_PORT` (Standard `3099`) für `/healthz`
-- Wenn YouTube-Geräte nicht erscheinen, ist meistens VLAN/Multicast/Firewall die Ursache, nicht fehlendes Docker-Port-Publishing.
-
-- This add-on does **not** provide a web UI.
-- If Home Assistant opens the add-on page and shows a 504 from nginx, this is expected for this add-on and does not indicate the bridge failed.
-- Health check endpoint is JSON on `/healthz` (and `/` returns a short status hint).
-- With `host_network: true`, DIAL ports are exposed on the HA host network directly; there is no Docker bridge port publishing for receiver ports.
-
-- For visibility issues in the YouTube app (device not listed despite running receivers), see `../docs/troubleshooting.md` section "Bridge not visible in YouTube app" (mDNS + SSDP + DIAL reachability checklist, including UniFi VLAN notes).
-- Default DIAL binding (with empty bind options) auto-selects a LAN IPv4, preferring the Linux default-route interface (to avoid `docker0`/bridge interfaces where possible).
-- On HA setups with multiple interfaces/VLANs, use add-on options `dial_bind_to_addresses` / `dial_bind_to_interfaces` to pin DIAL listeners to the LAN-reachable interface.
-
-
-### Schnelltest wenn YouTube nichts anzeigt
-
-1. Im gleichen WLAN/VLAN wie das Handy öffnen:
-   - `http://<HA-IP>:3099/healthz`
-   - `http://<HA-IP>:3000/ytbridge/<receiver-host-slug>/ssdp/device-desc.xml`
-2. Wenn eine URL nicht erreichbar ist: zuerst VLAN/Firewall/UniFi-Regeln prüfen (mDNS+SSDP+TCP DIAL).
-3. `noop`-Logs und gelegentliche RPC-Reconnects sind normal und nicht automatisch ein Fehler.
-
-
-Hinweis: `Cannot GET /ssdp/device-desc.xml` bedeutet meist, dass Prefix/Slug im Pfad fehlt.
-
-
-Erwartung: Wenn im Browser XML mit `<root xmlns="urn:schemas-upnp-org:device-1-0">` kommt, ist der DIAL-HTTP-Endpunkt erreichbar.
-Falls es trotzdem nicht in YouTube erscheint, liegt es meist an SSDP/Multicast/Reply-Pfad im Netzwerk (UniFi/VLAN), nicht am XML selbst.
