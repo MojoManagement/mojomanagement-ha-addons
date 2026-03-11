@@ -47,10 +47,6 @@ This repository is also a Home Assistant custom add-on repository with one add-o
 
 Use Home Assistant Add-on Store → Repositories and add this GitHub URL to install it.
 
-## Home Assistant Add-on packaging
-
-A production-oriented Home Assistant add-on packaging scaffold is available in `home-assistant-addons/yt-cast-audio-bridge/`.
-
 ## Troubleshooting
 
 See `docs/troubleshooting.md`.
