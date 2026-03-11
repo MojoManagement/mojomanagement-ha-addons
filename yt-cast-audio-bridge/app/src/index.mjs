@@ -15,6 +15,12 @@ if (process.argv.includes('--help')) {
 }
 
 const logger = createLogger(config.app.name, config.app.logLevel);
+logger.debug('Bootstrapping bridge process', {
+  pid: process.pid,
+  node: process.version,
+  platform: process.platform,
+  argv: process.argv.slice(2),
+});
 const stateStore = new StateStore(config.app.stateFile, logger);
 await stateStore.load();
 stateStore.setMeta({ appPid: process.pid, startedAt: Date.now() });
@@ -30,13 +36,26 @@ const receiverLogLevel = Constants.LOG_LEVELS[config.app.logLevel] ?? Constants.
 const supervisor = new MultiBridgeSupervisor({ registry, stateStore, logger, config, receiverLogLevel });
 
 logger.info(`DIAL config: basePort=${config.dial.basePort}, prefixBase=${config.dial.prefixBase}, bindToAddresses=${config.dial.bindToAddresses.join('|') || 'all'}, bindToInterfaces=${config.dial.bindToInterfaces.join('|') || 'all'}, defaultRouteIface=${config.dial.autoDetectedDefaultRouteInterface || 'n/a'}, autoDetected=${config.dial.autoDetectedInterface || 'n/a'}:${config.dial.autoDetectedAddress || 'n/a'} (candidates=${config.dial.autoDetectedCandidateCount})`);
+logger.debug('Effective runtime config snapshot', {
+  app: config.app,
+  dial: config.dial,
+  discovery: config.discovery,
+  naming: config.naming,
+  filters: { ...config.filters, pinnedHosts: [...config.filters.pinnedHosts] },
+  resolver: {
+    ytDlpBin: config.resolver.ytDlpBin,
+    hasCookiesFile: Boolean(config.resolver.ytCookiesFile),
+  },
+});
 await registry.start();
 logger.info('Discovery started');
 await sleep(config.discovery.startupGraceMs);
+logger.debug('Startup grace period completed, running first sync');
 await supervisor.sync();
 
 const syncTimer = setInterval(() => void supervisor.sync(), config.discovery.intervalMs);
 const healthServer = startHealthServer({ port: config.app.healthPort, getStatus: () => supervisor.getStatus(), logger });
+logger.debug('Recurring sync timer started', { intervalMs: config.discovery.intervalMs });
 
 async function shutdown(signal) {
   logger.info(`Stopping on ${signal}`);

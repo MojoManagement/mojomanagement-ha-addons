@@ -21,7 +21,7 @@ function pickBestAudioFormat(formats) {
   return [...candidates].sort((a, b) => scoreAudioFormat(b) - scoreAudioFormat(a))[0];
 }
 
-export async function resolveYouTubeAudio(videoId, { ytDlpBin, ytCookiesFile }) {
+export async function resolveYouTubeAudio(videoId, { ytDlpBin, ytCookiesFile, logger, label }) {
   const args = [
     '--no-playlist',
     '--dump-single-json',
@@ -30,6 +30,7 @@ export async function resolveYouTubeAudio(videoId, { ytDlpBin, ytCookiesFile }) 
     `https://www.youtube.com/watch?v=${videoId}`,
   ];
   if (ytCookiesFile) args.unshift('--cookies', ytCookiesFile);
+  logger?.debug?.(`[${label}] Resolving YouTube audio stream`, { videoId, ytDlpBin, usesCookies: Boolean(ytCookiesFile) });
 
   const { stdout, stderr } = await execFileAsync(ytDlpBin, args, { maxBuffer: 50 * 1024 * 1024 });
   if (!stdout) throw new Error(`yt-dlp returned no output. stderr=${stderr ?? ''}`);
@@ -37,6 +38,14 @@ export async function resolveYouTubeAudio(videoId, { ytDlpBin, ytCookiesFile }) 
   const info = JSON.parse(stdout);
   const audioFormat = pickBestAudioFormat(info.formats);
   if (!audioFormat?.url) throw new Error(`No usable audio-only format for ${videoId}`);
+  logger?.debug?.(`[${label}] Audio stream resolved`, {
+    videoId,
+    title: info.title ?? videoId,
+    duration: Number(info.duration ?? 0),
+    formatId: audioFormat.format_id,
+    ext: audioFormat.ext,
+    abr: audioFormat.abr,
+  });
 
   return {
     id: videoId,

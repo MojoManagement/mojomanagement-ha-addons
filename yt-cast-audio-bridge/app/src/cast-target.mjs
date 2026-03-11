@@ -26,9 +26,11 @@ const isNoSessionStartedError = (err) => /no session started/i.test(String(err?.
 const isNullDestroyError = (err) => /Cannot read properties of null \(reading 'destroy'\)/i.test(String(err?.message ?? err ?? ''));
 
 export class DeviceBoundCastTarget {
-  constructor({ getRecord, playRetryMs }) {
+  constructor({ getRecord, playRetryMs, logger, label }) {
     this.getRecord = getRecord;
     this.playRetryMs = playRetryMs;
+    this.logger = logger;
+    this.label = label;
     this.owner = null;
     this.boundHosts = new Set();
     this.controlChain = Promise.resolve();
@@ -40,6 +42,7 @@ export class DeviceBoundCastTarget {
 
   async waitForDevice(timeoutMs = this.playRetryMs) {
     const deadline = Date.now() + timeoutMs;
+    this.logger?.debug?.(`[${this.label}] Waiting for device to become available`, { timeoutMs });
     while (Date.now() < deadline) {
       const record = this.getRecord();
       if (record?.device) return record.device;
@@ -64,6 +67,7 @@ export class DeviceBoundCastTarget {
 
   async play(url, startTime = 0) {
     return this.runSerializedControl(async () => {
+      this.logger?.debug?.(`[${this.label}] Forwarding play`, { startTime });
       const runPlay = async () => {
         const device = await this.getDeviceOrWait();
         return startTime > 0 ? callDevice(device, 'play', url, { startTime }) : callDevice(device, 'play', url);
@@ -73,6 +77,7 @@ export class DeviceBoundCastTarget {
         return await runPlay();
       } catch (err) {
         if (!isNullDestroyError(err)) throw err;
+        this.logger?.warn?.(`[${this.label}] Device play hit transient null destroy error, retrying once`);
         await sleep(300);
         return runPlay();
       }

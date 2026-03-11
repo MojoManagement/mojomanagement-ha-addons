@@ -30,13 +30,24 @@ export class MultiBridgeSupervisor {
     this.nextPort = config.dial.basePort;
     this.includeRegex = safeRegex(config.filters.includeRegex);
     this.excludeRegex = safeRegex(config.filters.excludeRegex);
+    this.logger.debug('MultiBridgeSupervisor initialized', {
+      maxReceivers: config.discovery.maxReceivers,
+      playRetryMs: config.discovery.playRetryMs,
+      includeRegex: config.filters.includeRegex,
+      excludeRegex: config.filters.excludeRegex,
+      allowDuplicateFriendlyNames: config.naming.allowDuplicateFriendlyNames,
+    });
   }
 
   allocatePort(host) {
     const existing = this.stateStore.getHost(host)?.port;
-    if (Number.isFinite(existing)) return existing;
+    if (Number.isFinite(existing)) {
+      this.logger.debug('Reusing persisted receiver port', { host, port: existing });
+      return existing;
+    }
     const port = this.nextPort++;
     this.stateStore.setHost(host, { port });
+    this.logger.debug('Allocated new receiver port', { host, port });
     return port;
   }
 
@@ -59,23 +70,35 @@ export class MultiBridgeSupervisor {
 
   buildCandidates() {
     const seenFriendlyNames = new Set();
-    return this.registry.getActiveDevices()
+    const all = this.registry.getActiveDevices();
+    const candidates = all
       .filter((d) => this.shouldExpose(d, seenFriendlyNames))
       .slice(0, this.config.discovery.maxReceivers);
+    this.logger.debug('Built receiver candidate list', {
+      discovered: all.length,
+      selected: candidates.length,
+      selectedHosts: candidates.map((d) => d.host),
+    });
+    return candidates;
   }
 
   async sync() {
-    if (this.syncing) return;
+    if (this.syncing) {
+      this.logger.debug('Skipping sync because previous run is still in progress');
+      return;
+    }
     this.syncing = true;
     try {
       const now = Date.now();
       const candidates = this.buildCandidates();
       const desiredHosts = new Set(candidates.map((d) => d.host));
+      this.logger.debug('Sync cycle started', { desiredHosts: [...desiredHosts], activeInstances: this.instances.size });
 
       for (const device of candidates) {
         const host = device.host;
         if (this.instances.has(host)) {
           this.instances.get(host).firstMissingAt = null;
+          this.logger.debug('Receiver already running; keeping instance', { host });
           continue;
         }
 
@@ -108,7 +131,10 @@ export class MultiBridgeSupervisor {
         const age = record ? now - record.lastSeen : Infinity;
         const missingFor = now - state.firstMissingAt;
         const busy = state.receiver.activeSenders > 0;
-        if (busy || age < this.config.discovery.offlineHideAfterMs || missingFor < this.config.discovery.offlineHideAfterMs) continue;
+        if (busy || age < this.config.discovery.offlineHideAfterMs || missingFor < this.config.discovery.offlineHideAfterMs) {
+          this.logger.debug('Keeping receiver despite missing candidate', { host, busy, age, missingFor });
+          continue;
+        }
         await state.receiver.stop();
         this.instances.delete(host);
         this.logger.info(`Receiver removed for ${host}`);
@@ -116,12 +142,14 @@ export class MultiBridgeSupervisor {
 
       this.stateStore.setMeta({ instanceCount: this.instances.size });
       await this.stateStore.save();
+      this.logger.debug('Sync cycle completed', { activeInstances: this.instances.size });
     } finally {
       this.syncing = false;
     }
   }
 
   async stopAll() {
+    this.logger.debug('Stopping all receivers', { count: this.instances.size });
     for (const [, state] of this.instances.entries()) await state.receiver.stop();
     this.instances.clear();
   }

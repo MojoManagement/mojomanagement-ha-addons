@@ -4,7 +4,7 @@ export function createLogger(name, level = 'INFO') {
   const active = LEVELS[level] ?? LEVELS.INFO;
   const print = (wanted, method, ...args) => {
     if ((LEVELS[wanted] ?? 99) <= active) {
-      console[method](`[${name}]`, ...args);
+      console[method](`[${new Date().toISOString()}] [${name}] [${wanted}]`, ...args);
     }
   };
   return {
