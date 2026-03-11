@@ -1,8 +1,13 @@
 import ChromecastAPI from 'chromecast-api';
 
+function readTimestamp(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
 export class CastDeviceRegistry {
-  constructor({ intervalMs, offlineHideAfterMs, logger }) {
-    this.client = new ChromecastAPI();
+  constructor({ intervalMs, offlineHideAfterMs, logger, client }) {
+    this.client = client ?? new ChromecastAPI();
     this.intervalMs = intervalMs;
     this.offlineHideAfterMs = offlineHideAfterMs;
     this.logger = logger;
@@ -28,14 +33,20 @@ export class CastDeviceRegistry {
     return this.records.get(host) ?? null;
   }
 
-  getActiveDevices() {
-    return [...this.records.values()].map((r) => r.device).filter(Boolean);
+  getActiveRecords(now = Date.now()) {
+    return [...this.records.values()]
+      .filter((record) => (now - readTimestamp(record?.lastSeen)) <= this.offlineHideAfterMs)
+      .sort((a, b) => readTimestamp(b?.lastSeen) - readTimestamp(a?.lastSeen));
+  }
+
+  getActiveDevices(now = Date.now()) {
+    return this.getActiveRecords(now).map((r) => r.device).filter(Boolean);
   }
 
   prune() {
     const now = Date.now();
     for (const [host, record] of this.records.entries()) {
-      if (now - Number(record.lastSeen ?? 0) > this.offlineHideAfterMs * 3) this.records.delete(host);
+      if ((now - readTimestamp(record?.lastSeen)) > this.offlineHideAfterMs * 3) this.records.delete(host);
     }
   }
 
