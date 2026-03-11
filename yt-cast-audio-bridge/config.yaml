@@ -24,6 +24,8 @@ options:
   bridge_screen_prefix: "YouTube on"
   dial_base_port: 3000
   dial_prefix_base: "/ytbridge"
+  dial_bind_to_addresses: []
+  dial_bind_to_interfaces: []
   discovery_interval_ms: 5000
   offline_hide_after_ms: 180000
   play_retry_ms: 8000
@@ -43,6 +45,10 @@ schema:
   bridge_screen_prefix: str
   dial_base_port: int(1000,65000)
   dial_prefix_base: str
+  dial_bind_to_addresses:
+    - str?
+  dial_bind_to_interfaces:
+    - str?
   discovery_interval_ms: int(1000,120000)
   offline_hide_after_ms: int(10000,3600000)
   play_retry_ms: int(1000,120000)

@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { existsSync } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -14,6 +15,44 @@ const asInt = (value, fallback) => {
   return Number.isFinite(n) ? n : fallback;
 };
 
+const asCsvList = (value) => String(value ?? '').split(',').map((s) => s.trim()).filter(Boolean);
+
+function isCandidateLanIpv4(entry) {
+  const addr = String(entry?.address ?? '');
+  if (!entry || entry.internal || entry.family !== 'IPv4' || !addr) return false;
+  if (addr.startsWith('127.')) return false;
+  if (addr.startsWith('169.254.')) return false;
+  return true;
+}
+
+function autodetectDialBinding() {
+  const candidates = [];
+  for (const [iface, addresses] of Object.entries(os.networkInterfaces())) {
+    for (const entry of addresses ?? []) {
+      if (!isCandidateLanIpv4(entry)) continue;
+      candidates.push({ iface, address: entry.address });
+    }
+  }
+
+  candidates.sort((a, b) => a.iface.localeCompare(b.iface) || a.address.localeCompare(b.address));
+  const first = candidates[0] ?? null;
+  return {
+    detectedAddress: first?.address ?? '',
+    detectedInterface: first?.iface ?? '',
+    candidateCount: candidates.length,
+  };
+}
+
+const explicitDialBindAddresses = asCsvList(env('DIAL_BIND_TO_ADDRESSES', ''));
+const explicitDialBindInterfaces = asCsvList(env('DIAL_BIND_TO_INTERFACES', ''));
+const autoDialBinding = autodetectDialBinding();
+
+const bindToAddresses = explicitDialBindAddresses.length
+  ? explicitDialBindAddresses
+  : (explicitDialBindInterfaces.length ? [] : (autoDialBinding.detectedAddress ? [autoDialBinding.detectedAddress] : []));
+
+const bindToInterfaces = explicitDialBindInterfaces;
+
 const defaultYtDlpBin = process.env.YT_DLP_BIN
   ?? (existsSync(localYtDlpPath) ? localYtDlpPath : 'yt-dlp');
 
@@ -27,6 +66,11 @@ export const config = {
   dial: {
     basePort: asInt(env('DIAL_BASE_PORT', '3000'), 3000),
     prefixBase: env('DIAL_PREFIX_BASE', '/ytbridge'),
+    bindToAddresses,
+    bindToInterfaces,
+    autoDetectedAddress: autoDialBinding.detectedAddress,
+    autoDetectedInterface: autoDialBinding.detectedInterface,
+    autoDetectedCandidateCount: autoDialBinding.candidateCount,
   },
   discovery: {
     intervalMs: asInt(env('DISCOVERY_INTERVAL_MS', '5000'), 5000),
@@ -44,7 +88,7 @@ export const config = {
     includeRegex: env('INCLUDE_REGEX', ''),
     excludeRegex: env('EXCLUDE_REGEX', 'Chromecast|Google TV|Nest Hub|Shield|Roku|Fire TV'),
     onlyAudioLike: env('ONLY_AUDIO_LIKE', '1') === '1',
-    pinnedHosts: env('PINNED_HOSTS', '').split(',').map((s) => s.trim()).filter(Boolean),
+    pinnedHosts: asCsvList(env('PINNED_HOSTS', '')),
   },
   resolver: {
     ytDlpBin: defaultYtDlpBin,

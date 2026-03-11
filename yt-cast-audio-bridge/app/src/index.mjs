@@ -29,6 +29,7 @@ const registry = new CastDeviceRegistry({
 const receiverLogLevel = Constants.LOG_LEVELS[config.app.logLevel] ?? Constants.LOG_LEVELS.INFO;
 const supervisor = new MultiBridgeSupervisor({ registry, stateStore, logger, config, receiverLogLevel });
 
+logger.info(`DIAL config: basePort=${config.dial.basePort}, prefixBase=${config.dial.prefixBase}, bindToAddresses=${config.dial.bindToAddresses.join('|') || 'all'}, bindToInterfaces=${config.dial.bindToInterfaces.join('|') || 'all'}, autoDetected=${config.dial.autoDetectedInterface || 'n/a'}:${config.dial.autoDetectedAddress || 'n/a'} (candidates=${config.dial.autoDetectedCandidateCount})`);
 await registry.start();
 logger.info('Discovery started');
 await sleep(config.discovery.startupGraceMs);

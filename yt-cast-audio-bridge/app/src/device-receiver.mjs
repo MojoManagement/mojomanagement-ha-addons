@@ -61,7 +61,7 @@ class ForwardingPlayer extends Player {
 }
 
 export class DeviceReceiver {
-  constructor({ port, dialPrefix, virtualName, screenName, host, registry, label, logger, logLevel, resolverConfig, playRetryMs }) {
+  constructor({ port, dialPrefix, dialBindToAddresses, dialBindToInterfaces, virtualName, screenName, host, registry, label, logger, logLevel, resolverConfig, playRetryMs }) {
     this.port = port;
     this.host = host;
     this.label = label;
@@ -72,7 +72,12 @@ export class DeviceReceiver {
     const player = new ForwardingPlayer({ target, label, logger, resolverConfig });
 
     this.receiver = new YouTubeCastReceiver(player, {
-      dial: { port, prefix: dialPrefix },
+      dial: {
+        port,
+        prefix: dialPrefix,
+        bindToAddresses: dialBindToAddresses?.length ? dialBindToAddresses : undefined,
+        bindToInterfaces: dialBindToInterfaces?.length ? dialBindToInterfaces : undefined,
+      },
       app: {
         enableAutoplayOnConnect: true,
         resetPlayerOnDisconnectPolicy: Constants.RESET_PLAYER_ON_DISCONNECT_POLICIES.ALL_EXPLICITLY_DISCONNECTED,
