@@ -41,6 +41,10 @@ Health endpoint: `http://localhost:3099/healthz`
 
 See `.env.example` for all options.
 
+## Home Assistant add-on repository
+
+Use `scripts/bootstrap-ha-addon-repo.sh` to generate the dedicated Home Assistant add-on repository scaffold (for example `mojomanagement-ha-addons`) from this bridge source tree.
+
 ## Home Assistant Add-on packaging
 
 A production-oriented Home Assistant add-on packaging scaffold is available in `home-assistant-addons/yt-cast-audio-bridge/`.
