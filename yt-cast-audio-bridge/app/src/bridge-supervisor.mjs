@@ -84,6 +84,8 @@ export class MultiBridgeSupervisor {
         const receiver = new DeviceReceiver({
           port: this.allocatePort(host),
           dialPrefix: `${this.config.dial.prefixBase}/${slugify(host)}`,
+          dialBindToAddresses: this.config.dial.bindToAddresses,
+          dialBindToInterfaces: this.config.dial.bindToInterfaces,
           virtualName: `${this.config.naming.bridgeNamePrefix} ${visibleName}`.trim(),
           screenName: `${this.config.naming.bridgeScreenPrefix} ${visibleName}`.trim(),
           host,
