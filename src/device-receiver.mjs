@@ -11,7 +11,7 @@ class ForwardingPlayer extends Player {
     super();
     this.target = target;
     this.label = label;
-    this.logger = logger;
+    this._bridgeLogger = logger;
     this.resolverConfig = resolverConfig;
     this.currentTrack = null;
     this.volume = { level: 50, muted: false };
@@ -25,10 +25,10 @@ class ForwardingPlayer extends Player {
       this.currentTrack = track;
       await this.target.play(track.mediaUrl, Number(position || 0));
       await this.target.setVolume((this.volume.muted ? 0 : this.volume.level) / 100);
-      this.logger.info(`[${this.label}] Forwarding "${track.title}"`);
+      this._bridgeLogger.info(`[${this.label}] Forwarding "${track.title}"`);
       return true;
     } catch (err) {
-      this.logger.error(`[${this.label}] doPlay failed`, err?.message ?? err);
+      this._bridgeLogger.error(`[${this.label}] doPlay failed`, err?.message ?? err);
       return false;
     }
   }
