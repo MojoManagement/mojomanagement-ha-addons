@@ -7,15 +7,19 @@ function callDevice(device, method, ...args) {
   });
 }
 
+function readNumber(value, fallback = 0) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : fallback;
+}
+
 function getCurrentTime(device) {
-  return new Promise((resolve) => {
-    if (!device || typeof device.getCurrentTime !== 'function') return resolve(0);
-    try {
-      device.getCurrentTime((seconds) => resolve(Number.isFinite(Number(seconds)) ? Number(seconds) : 0));
-    } catch {
-      resolve(0);
-    }
-  });
+  // NOTE:
+  // chromecast-api#getCurrentTime can throw asynchronously in some sessions when
+  // `player.getStatus()` resolves with an undefined status object.
+  // To keep the bridge process stable we avoid that call path and read the most
+  // recent known status snapshot only.
+  const mediaStatus = device?.player?.status ?? device?.player?.media?.status;
+  return Promise.resolve(readNumber(mediaStatus?.currentTime, 0));
 }
 
 const isNoSessionStartedError = (err) => /no session started/i.test(String(err?.message ?? err ?? ''));
