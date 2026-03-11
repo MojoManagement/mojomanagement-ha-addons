@@ -24,8 +24,9 @@ npm start
 - This add-on does **not** provide a web UI.
 - If Home Assistant opens the add-on page and shows a 504 from nginx, this is expected for this add-on and does not indicate the bridge failed.
 - Health check endpoint is JSON on `/healthz` (and `/` returns a short status hint).
+- With `host_network: true`, DIAL ports are exposed on the HA host network directly; there is no Docker bridge port publishing for receiver ports.
 
-- For visibility issues in the YouTube app (device not listed despite running receivers), see `../docs/troubleshooting.md` section "Bridge not visible in YouTube app" (mDNS + DIAL port reachability checklist).
-- Default DIAL binding (with empty bind options) auto-selects the first non-loopback LAN IPv4 detected by the host.
+- For visibility issues in the YouTube app (device not listed despite running receivers), see `../docs/troubleshooting.md` section "Bridge not visible in YouTube app" (mDNS + SSDP + DIAL reachability checklist, including UniFi VLAN notes).
+- Default DIAL binding (with empty bind options) auto-selects a LAN IPv4, preferring the Linux default-route interface (to avoid `docker0`/bridge interfaces where possible).
 - On HA setups with multiple interfaces/VLANs, use add-on options `dial_bind_to_addresses` / `dial_bind_to_interfaces` to pin DIAL listeners to the LAN-reachable interface.
 
