@@ -11,7 +11,8 @@
     "dev": "node --watch src/index.mjs",
     "lint": "for f in src/*.mjs; do node --check \"$f\"; done",
     "test": "node --test",
-    "smoke": "node --check src/index.mjs"
+    "smoke": "node --check src/index.mjs",
+    "postinstall": "node scripts/postinstall-yt-dlp.mjs"
   },
   "keywords": [
     "youtube",
@@ -27,6 +28,7 @@
   "dependencies": {
     "chromecast-api": "^0.3.4",
     "dotenv": "^16.4.5",
-    "yt-cast-receiver": "latest"
+    "yt-cast-receiver": "latest",
+    "yt-dlp-wrap": "^2.3.12"
   }
 }

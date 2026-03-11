@@ -2,7 +2,7 @@
 
 ## Receiver visible, but no play
 
-- Confirm `yt-dlp` is installed and executable.
+- Confirm `yt-dlp` is installed and executable, or run `npm install` to provision the local fallback in `tools/bin/yt-dlp`.
 - Ensure Cast device can reach media URL from bridge host network.
 - Check logs for `doPlay failed`.
 
