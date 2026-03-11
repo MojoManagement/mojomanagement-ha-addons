@@ -11,21 +11,10 @@ This folder packages the bridge as a Home Assistant add-on.
 
 ## Development
 
-For local development, use the repository root app directly (or use `yt-cast-audio-bridge/app/.env.example` as reference for add-on defaults):
+For local development, use the repository root app directly:
 
 ```bash
 npm install
 cp .env.example .env
 npm start
 ```
-
-## Install in Home Assistant
-
-1. Add this repository URL in **Add-on Store → Repositories**.
-2. Install **YT Cast Audio Bridge**.
-3. Configure options as needed and start the add-on.
-
-
-## Standalone mode
-
-The add-on package is built from the same bridge codebase, while local development should run from repository root (`npm start`).

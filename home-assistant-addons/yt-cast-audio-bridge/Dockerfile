@@ -8,6 +8,7 @@ RUN apk add --no-cache bash jq yt-dlp \
 
 COPY app/package.json ./package.json
 COPY app/src ./src
+COPY app/scripts ./scripts
 
 RUN npm install --omit=dev --no-audit --no-fund
 
