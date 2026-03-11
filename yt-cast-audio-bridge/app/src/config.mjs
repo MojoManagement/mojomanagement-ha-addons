@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, '..');
-const localYtDlpPath = path.join(repoRoot, 'tools', 'bin', process.platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp');
+const localYtDlpPath = path.join(repoRoot, 'tools', 'bin', process.platform === 'win32' ? 'yt-dlp.cmd' : 'yt-dlp');
 
 const env = (name, fallback = '') => process.env[name] ?? fallback;
 const asInt = (value, fallback) => {
