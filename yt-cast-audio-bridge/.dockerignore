@@ -1,0 +1,7 @@
+# Keep addon build context minimal
+.git
+.github
+node_modules
+npm-debug.log*
+README.md
+*.md
