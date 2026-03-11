@@ -11,7 +11,7 @@ This folder packages the bridge as a Home Assistant add-on.
 
 ## Development
 
-For local development, use the repository root app directly:
+For local development, use the repository root app directly (or use `yt-cast-audio-bridge/app/.env.example` as reference for add-on defaults):
 
 ```bash
 npm install
