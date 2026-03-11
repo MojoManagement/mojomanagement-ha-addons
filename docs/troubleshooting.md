@@ -41,7 +41,7 @@ If logs show `Receiver started ...` but the phone app still does not list bridge
 
 - **mDNS**: UDP `5353` to multicast `224.0.0.251` (Bonjour).
 - **SSDP/DIAL discovery**: UDP `1900` to multicast `239.255.255.250` plus unicast replies back to the sender.
-- **DIAL app endpoints**: inbound TCP on `DIAL_BASE_PORT` and following ports (default `3000-3025` for up to 25 receivers).
+- **DIAL app endpoints**: inbound TCP on `DIAL_BASE_PORT` and following ports (default `3000-3024` for up to 25 receivers).
 - **Health check (optional)**: TCP `3099` (`/healthz`) for diagnostics.
 
 Notes for HA OS/add-on runtime:
@@ -53,7 +53,7 @@ Checklist:
 
 - Ensure phone and HA host are in the same L2 segment/VLAN (no client isolation/guest Wi-Fi).
 - Allow **both** discovery planes between phone VLAN and HA host VLAN: mDNS/Bonjour (`224.0.0.251:5353` UDP) **and** SSDP/DIAL (`239.255.255.250:1900` UDP).
-- Allow inbound TCP from phone subnet to HA host on DIAL ports (`DIAL_BASE_PORT` and following ports, e.g. `3000-3025` for up to 25 receivers).
+- Allow inbound TCP from phone subnet to HA host on DIAL ports (`DIAL_BASE_PORT` and following ports, e.g. `3000-3024` for up to 25 receivers).
 - On UniFi specifically: enabling only “mDNS” is often not enough for YouTube Cast discovery across VLANs; also allow/reflection/routing for SSDP multicast and the unicast reply path.
 - Keep add-on on host networking (required for Cast discovery).
 - Default behavior (when both bind options are empty): auto-pick a non-loopback LAN IPv4, preferring the interface used by the Linux default route (helps avoid selecting `docker0`/bridge interfaces first).
@@ -98,7 +98,7 @@ If the bridge still does not appear in YouTube, use this quick sequence.
 - Disable client isolation/guest isolation for test.
 - Allow mDNS (`224.0.0.251:5353/udp`) between phone VLAN and HA VLAN.
 - Allow SSDP multicast (`239.255.255.250:1900/udp`) plus unicast reply path.
-- Allow inbound TCP from phone VLAN to HA host on DIAL range (`3000-3025` by default) and health port (`3099`).
+- Allow inbound TCP from phone VLAN to HA host on DIAL range (`3000-3024` by default) and health port (`3099`).
 
 5) Proxmox / VM checks
 
@@ -146,7 +146,7 @@ sudo tcpdump -ni any udp port 1900
 sudo tcpdump -ni any udp port 5353
 
 # See whether phone reaches DIAL HTTP endpoint on receiver ports
-sudo tcpdump -ni any 'tcp portrange 3000-3025'
+sudo tcpdump -ni any 'tcp portrange 3000-3024'
 ```
 
 Expected when discovery works:

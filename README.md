@@ -1,76 +1,49 @@
-# YT Cast Audio Bridge (beta)
+# MojoManagement Home Assistant Add-ons
 
-Virtual YouTube receivers that forward playback to Cast audio devices.
+This is a **Home Assistant add-on repository**.
 
-> Status: **hardened experimental / beta**. This project is not marketed as production-ready.
+It currently contains **one add-on**:
 
-## What it does
+- [`yt-cast-audio-bridge`](./yt-cast-audio-bridge): Virtual YouTube receivers that forward playback to Cast audio devices.
 
-Creates one virtual YouTube Cast receiver per discovered Cast audio target and forwards playback commands/media to the real target.
+## Add this repository to Home Assistant
 
-## What it does not do
+1. Open **Settings → Add-ons → Add-on Store**.
+2. Open the menu (**⋮**) → **Repositories**.
+3. Add this repository URL.
+4. Refresh the store.
+5. Open the add-on `YT Cast Audio Bridge` and install it.
 
-- No guarantee for every Cast device/model/network.
-- No official Google support path.
-- No DLNA/AirPlay backend support out of the box.
+Repository metadata is defined in [`repository.yaml`](./repository.yaml).
 
-## Architecture (short)
+## Included add-on
 
-1. YouTube app connects to a virtual receiver via DIAL/MDX.
-2. Receiver translates controls into a local forwarding player.
-3. Player resolves audio stream URL and forwards to a real Cast audio target.
+### YT Cast Audio Bridge (`yt_cast_audio_bridge`)
 
-## Requirements
+- Folder: [`yt-cast-audio-bridge/`](./yt-cast-audio-bridge/)
+- Add-on config: [`yt-cast-audio-bridge/config.yaml`](./yt-cast-audio-bridge/config.yaml)
+- Runtime app source: [`yt-cast-audio-bridge/app`](./yt-cast-audio-bridge/app)
+- Health endpoint: `http://<HA-IP>:3099/healthz`
 
-- Node.js 20+
-- `yt-dlp` in PATH (or configured via `YT_DLP_BIN`). If missing, `npm install` tries to download a local fallback binary into `tools/bin/`.
-- Same LAN for sender, bridge host, and Cast devices
-- Discoverable Cast devices
+For full usage and network notes, see [`yt-cast-audio-bridge/README.md`](./yt-cast-audio-bridge/README.md).
 
-## Quick start
+## Development (repository)
 
 ```bash
 npm install
-cp .env.example .env
-npm start
+npm run lint
+npm test
+npm run smoke
 ```
 
-Health endpoint: `http://localhost:3099/healthz`
+## Documentation
 
-## Configuration
+- Architecture: [`docs/architecture.md`](./docs/architecture.md)
+- Troubleshooting: [`docs/troubleshooting.md`](./docs/troubleshooting.md)
+- Limitations: [`docs/limitations.md`](./docs/limitations.md)
 
-See `.env.example` for all options.
+## Legal
 
-For multi-NIC hosts (or when auto-detect chooses the wrong path), you can pin DIAL/SSDP binding explicitly in `.env`:
-
-```bash
-DIAL_BIND_TO_ADDRESSES=192.168.50.137
-DIAL_BIND_TO_INTERFACES=enp6s18
-```
-
-`npm start` and the Home Assistant add-on use the same Node entrypoint (`src/index.mjs`) and the same config parser; the add-on only injects values from `/data/options.json` into environment variables before launching Node.
-
-## Home Assistant add-on
-
-This repository is also a Home Assistant custom add-on repository with one add-on at `yt-cast-audio-bridge/` (plus `repository.yaml` at repo root).
-
-Use Home Assistant Add-on Store → Repositories and add this GitHub URL to install it.
-
-## Troubleshooting
-
-See `docs/troubleshooting.md`.
-
-## Known limitations
-
-See `docs/limitations.md`.
-
-## Legal and notices
-
-- Third-party notices: `THIRD_PARTY_NOTICES.md`
-- Additional notice: `NOTICE`
-
-Important: `yt-cast-receiver` documents usage of a forked `peer-dial` variant marked “free for non commercial use”. Review before commercial usage.
-
-## License
-
-MIT (`LICENSE`).
+- License: [`LICENSE`](./LICENSE)
+- Notice: [`NOTICE`](./NOTICE)
+- Third-party notices: [`THIRD_PARTY_NOTICES.md`](./THIRD_PARTY_NOTICES.md)

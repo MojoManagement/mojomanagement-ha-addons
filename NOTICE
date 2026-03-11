@@ -1,4 +1,5 @@
 YT Cast Audio Bridge includes third-party components.
 
-See THIRD_PARTY_NOTICES.md for dependency notices and upstream licensing caveats,
-including non-commercial-use notes around peer-dial usage in yt-cast-receiver documentation.
+See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for dependency notices and
+upstream licensing caveats, including non-commercial-use notes around
+`peer-dial` usage referenced by `yt-cast-receiver` documentation.
