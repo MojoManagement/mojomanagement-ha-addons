@@ -21,11 +21,17 @@ class ForwardingPlayer extends Player {
 
   async doPlay(video, position) {
     try {
-      const track = await resolveYouTubeAudio(video.id, this.resolverConfig);
+      this._bridgeLogger.debug(`[${this.label}] Resolving media`, { videoId: video?.id, position: Number(position || 0) });
+      const track = await resolveYouTubeAudio(video.id, {
+        ...this.resolverConfig,
+        logger: this._bridgeLogger,
+        label: this.label,
+      });
       this.currentTrack = track;
       await this.target.play(track.mediaUrl, Number(position || 0));
       await this.target.setVolume((this.volume.muted ? 0 : this.volume.level) / 100);
       this._bridgeLogger.info(`[${this.label}] Forwarding "${track.title}"`);
+      this._bridgeLogger.debug(`[${this.label}] Playback started`, { duration: track.duration, isLive: track.isLive });
       return true;
     } catch (err) {
       this._bridgeLogger.error(`[${this.label}] doPlay failed`, err?.message ?? err);
@@ -33,10 +39,23 @@ class ForwardingPlayer extends Player {
     }
   }
 
-  async doPause() { try { await this.target.pause(); return true; } catch { return false; } }
-  async doResume() { try { await this.target.resume(); return true; } catch { return false; } }
-  async doStop() { try { await this.target.stop(); return true; } catch { return false; } }
-  async doSeek(position) { try { if (this.currentTrack?.isLive) return false; await this.target.seekTo(Number(position || 0)); return true; } catch { return false; } }
+  async doPause() {
+    try { await this.target.pause(); this._bridgeLogger.debug(`[${this.label}] Pause forwarded`); return true; } catch { return false; }
+  }
+  async doResume() {
+    try { await this.target.resume(); this._bridgeLogger.debug(`[${this.label}] Resume forwarded`); return true; } catch { return false; }
+  }
+  async doStop() {
+    try { await this.target.stop(); this._bridgeLogger.debug(`[${this.label}] Stop forwarded`); return true; } catch { return false; }
+  }
+  async doSeek(position) {
+    try {
+      if (this.currentTrack?.isLive) return false;
+      await this.target.seekTo(Number(position || 0));
+      this._bridgeLogger.debug(`[${this.label}] Seek forwarded`, { position: Number(position || 0) });
+      return true;
+    } catch { return false; }
+  }
 
   async doSetVolume(volume) {
     try {
@@ -49,6 +68,7 @@ class ForwardingPlayer extends Player {
       } catch (err) {
         if (!DeviceBoundCastTarget.isNoSessionStartedError(err)) throw err;
       }
+      this._bridgeLogger.debug(`[${this.label}] Volume updated`, { muted, level: this.volume.level });
       return true;
     } catch {
       return false;
@@ -68,7 +88,7 @@ export class DeviceReceiver {
     this.started = false;
     this.activeSenders = 0;
 
-    const target = new DeviceBoundCastTarget({ getRecord: () => registry.getRecord(host), playRetryMs });
+    const target = new DeviceBoundCastTarget({ getRecord: () => registry.getRecord(host), playRetryMs, logger, label });
     const player = new ForwardingPlayer({ target, label, logger, resolverConfig });
 
     this.receiver = new YouTubeCastReceiver(player, {
@@ -94,10 +114,27 @@ export class DeviceReceiver {
       logLevel,
     });
 
-    this.receiver.on('senderConnect', () => { this.activeSenders += 1; });
-    this.receiver.on('senderDisconnect', () => { this.activeSenders = Math.max(0, this.activeSenders - 1); });
+    this.receiver.on('senderConnect', () => {
+      this.activeSenders += 1;
+      logger.debug(`[${label}] Sender connected`, { activeSenders: this.activeSenders });
+    });
+    this.receiver.on('senderDisconnect', () => {
+      this.activeSenders = Math.max(0, this.activeSenders - 1);
+      logger.debug(`[${label}] Sender disconnected`, { activeSenders: this.activeSenders });
+    });
+    logger.debug(`[${label}] DeviceReceiver created`, { host, port, dialPrefix });
   }
 
-  async start() { if (!this.started) { await this.receiver.start(); this.started = true; } }
-  async stop() { if (this.started) { await this.receiver.stop(); this.started = false; } }
+  async start() {
+    if (!this.started) {
+      await this.receiver.start();
+      this.started = true;
+    }
+  }
+  async stop() {
+    if (this.started) {
+      await this.receiver.stop();
+      this.started = false;
+    }
+  }
 }

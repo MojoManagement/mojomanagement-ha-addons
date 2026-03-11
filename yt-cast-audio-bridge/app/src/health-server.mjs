@@ -2,6 +2,7 @@ import http from 'node:http';
 
 export function startHealthServer({ port, getStatus, logger }) {
   const server = http.createServer((req, res) => {
+    logger.debug('Health server request', { method: req.method, url: req.url });
     if (req.url === '/' || req.url === '') {
       const payload = {
         ok: true,
@@ -16,6 +17,7 @@ export function startHealthServer({ port, getStatus, logger }) {
     if (req.url !== '/healthz') {
       res.statusCode = 404;
       res.end('not found');
+      logger.debug('Health server 404 response', { url: req.url });
       return;
     }
     const payload = { ok: true, timestamp: new Date().toISOString(), ...getStatus() };

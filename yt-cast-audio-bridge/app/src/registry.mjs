@@ -15,6 +15,7 @@ export class CastDeviceRegistry {
     this.timer = null;
 
     this.client.on('device', (device) => this.touchDevice(device, 'event'));
+    this.logger?.debug?.('CastDeviceRegistry initialized', { intervalMs, offlineHideAfterMs });
   }
 
   touchDevice(device, source = 'unknown') {
@@ -23,6 +24,7 @@ export class CastDeviceRegistry {
     const now = Date.now();
     const existing = this.records.get(host);
     this.records.set(host, { device, firstSeen: existing?.firstSeen ?? now, lastSeen: now, source });
+    if (!existing) this.logger?.debug?.('Discovered new cast device', { host, source, name: device?.friendlyName ?? device?.name ?? '' });
   }
 
   refreshFromClientCache() {
@@ -46,25 +48,36 @@ export class CastDeviceRegistry {
   prune() {
     const now = Date.now();
     for (const [host, record] of this.records.entries()) {
-      if ((now - readTimestamp(record?.lastSeen)) > this.offlineHideAfterMs * 3) this.records.delete(host);
+      if ((now - readTimestamp(record?.lastSeen)) > this.offlineHideAfterMs * 3) {
+        this.records.delete(host);
+        this.logger?.debug?.('Pruned stale device record', { host });
+      }
     }
   }
 
   async start() {
     const tick = () => {
+      const before = this.records.size;
       try {
         if (typeof this.client.update === 'function') this.client.update();
       } catch (err) {
-        this.logger.warn('Discovery update failed', err?.message ?? err);
+        this.logger?.warn?.('Discovery update failed', err?.message ?? err);
       }
       this.refreshFromClientCache();
       this.prune();
+      this.logger?.debug?.('Discovery tick completed', {
+        recordsBefore: before,
+        recordsAfter: this.records.size,
+        active: this.getActiveRecords().length,
+      });
     };
     tick();
     this.timer = setInterval(tick, this.intervalMs);
+    this.logger?.debug?.('Discovery loop started', { intervalMs: this.intervalMs });
   }
 
   async stop() {
     if (this.timer) clearInterval(this.timer);
+    this.logger?.debug?.('Discovery loop stopped');
   }
 }
