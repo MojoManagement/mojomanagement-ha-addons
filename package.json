@@ -27,6 +27,6 @@
   "dependencies": {
     "chromecast-api": "^0.3.4",
     "dotenv": "^16.4.5",
-    "yt-cast-receiver": "^2.3.0"
+    "yt-cast-receiver": "latest"
   }
 }
