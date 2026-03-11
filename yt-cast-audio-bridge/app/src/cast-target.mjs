@@ -23,6 +23,7 @@ function getCurrentTime(device) {
 }
 
 const isNoSessionStartedError = (err) => /no session started/i.test(String(err?.message ?? err ?? ''));
+const isNullDestroyError = (err) => /Cannot read properties of null \(reading 'destroy'\)/i.test(String(err?.message ?? err ?? ''));
 
 export class DeviceBoundCastTarget {
   constructor({ getRecord, playRetryMs }) {
@@ -30,6 +31,7 @@ export class DeviceBoundCastTarget {
     this.playRetryMs = playRetryMs;
     this.owner = null;
     this.boundHosts = new Set();
+    this.controlChain = Promise.resolve();
   }
 
   attachOwner(player) {
@@ -54,23 +56,55 @@ export class DeviceBoundCastTarget {
     return waited;
   }
 
-  async play(url, startTime = 0) {
-    const device = await this.getDeviceOrWait();
-    return startTime > 0 ? callDevice(device, 'play', url, { startTime }) : callDevice(device, 'play', url);
+  runSerializedControl(action) {
+    const next = this.controlChain.then(action, action);
+    this.controlChain = next.catch(() => {});
+    return next;
   }
 
-  async pause() { return callDevice(await this.getDeviceOrWait(), 'pause'); }
-  async resume() { return callDevice(await this.getDeviceOrWait(), 'resume'); }
-  async seekTo(seconds) { return callDevice(await this.getDeviceOrWait(), 'seekTo', seconds); }
-  async setVolume(level) { return callDevice(await this.getDeviceOrWait(), 'setVolume', Math.max(0, Math.min(1, level))); }
+  async play(url, startTime = 0) {
+    return this.runSerializedControl(async () => {
+      const runPlay = async () => {
+        const device = await this.getDeviceOrWait();
+        return startTime > 0 ? callDevice(device, 'play', url, { startTime }) : callDevice(device, 'play', url);
+      };
+
+      try {
+        return await runPlay();
+      } catch (err) {
+        if (!isNullDestroyError(err)) throw err;
+        await sleep(300);
+        return runPlay();
+      }
+    });
+  }
+
+  async pause() {
+    return this.runSerializedControl(async () => callDevice(await this.getDeviceOrWait(), 'pause'));
+  }
+
+  async resume() {
+    return this.runSerializedControl(async () => callDevice(await this.getDeviceOrWait(), 'resume'));
+  }
+
+  async seekTo(seconds) {
+    return this.runSerializedControl(async () => callDevice(await this.getDeviceOrWait(), 'seekTo', seconds));
+  }
+
+  async setVolume(level) {
+    return this.runSerializedControl(async () => callDevice(await this.getDeviceOrWait(), 'setVolume', Math.max(0, Math.min(1, level))));
+  }
+
   async getPosition() { return getCurrentTime(await this.getDeviceOrWait()); }
 
   async stop() {
-    try {
-      await callDevice(await this.getDeviceOrWait(), 'stop');
-    } catch (err) {
-      if (!isNoSessionStartedError(err)) throw err;
-    }
+    return this.runSerializedControl(async () => {
+      try {
+        await callDevice(await this.getDeviceOrWait(), 'stop');
+      } catch (err) {
+        if (!isNoSessionStartedError(err)) throw err;
+      }
+    });
   }
 
   static isNoSessionStartedError(err) {
