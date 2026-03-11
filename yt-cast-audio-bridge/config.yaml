@@ -1,5 +1,5 @@
 name: "YT Cast Audio Bridge"
-version: "0.1.5"
+version: "0.1.6"
 slug: "yt_cast_audio_bridge"
 description: "Virtual YouTube receivers that forward playback to Cast audio devices"
 url: "https://github.com/MojoManagement/mojomanagement-ha-addons"
