@@ -41,6 +41,17 @@ Health endpoint: `http://localhost:3099/healthz`
 
 See `.env.example` for all options.
 
+## Home Assistant add-on
+
+This repository is also a Home Assistant custom add-on repository with one add-on at `yt-cast-audio-bridge/` (plus `repository.yaml` at repo root).
+
+Install in Home Assistant:
+1. Open **Settings → Add-ons → Add-on Store → ⋮ → Repositories**.
+2. Add this GitHub repository URL.
+3. Install **YT Cast Audio Bridge** and start it.
+
+For standalone development, keep using the root Node.js app (`npm start`) as documented above.
+
 ## Troubleshooting
 
 See `docs/troubleshooting.md`.
