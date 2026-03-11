@@ -24,3 +24,8 @@ npm start
 1. Add this repository URL in **Add-on Store → Repositories**.
 2. Install **YT Cast Audio Bridge**.
 3. Configure options as needed and start the add-on.
+
+
+## Standalone mode
+
+The add-on package is built from the same bridge codebase, while local development should run from repository root (`npm start`).

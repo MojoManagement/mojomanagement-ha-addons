@@ -43,7 +43,7 @@ See `.env.example` for all options.
 
 ## Home Assistant add-on
 
-This repository is also a Home Assistant custom add-on repository with one add-on at `yt-cast-audio-bridge/` (plus `repository.yaml` at repo root).
+This repository doubles as the bridge source and a Home Assistant custom add-on repository with one add-on at `yt-cast-audio-bridge/` (plus `repository.yaml` at repo root).
 
 Install in Home Assistant:
 1. Open **Settings → Add-ons → Add-on Store → ⋮ → Repositories**.

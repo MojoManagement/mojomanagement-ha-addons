@@ -3,10 +3,13 @@ FROM ${BUILD_FROM}
 
 WORKDIR /opt/yt-cast-audio-bridge
 
+LABEL org.opencontainers.image.title="YT Cast Audio Bridge HA Add-on"
+
 RUN apk add --no-cache bash jq yt-dlp \
   && mkdir -p /data/yt-cast-audio-bridge/state
 
 COPY app/package.json ./package.json
+COPY app/.env.example ./.env.example
 COPY app/src ./src
 
 RUN npm install --omit=dev --ignore-scripts --no-audit --no-fund
