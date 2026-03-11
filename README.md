@@ -23,7 +23,7 @@ Creates one virtual YouTube Cast receiver per discovered Cast audio target and f
 ## Requirements
 
 - Node.js 20+
-- `yt-dlp` in PATH (or configured via `YT_DLP_BIN`)
+- `yt-dlp` in PATH (or configured via `YT_DLP_BIN`). If missing, `npm install` tries to download a local fallback binary into `tools/bin/`.
 - Same LAN for sender, bridge host, and Cast devices
 - Discoverable Cast devices
 

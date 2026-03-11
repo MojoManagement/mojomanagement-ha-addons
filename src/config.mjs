@@ -1,10 +1,21 @@
 import 'dotenv/config';
+import { existsSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const repoRoot = path.resolve(__dirname, '..');
+const localYtDlpPath = path.join(repoRoot, 'tools', 'bin', process.platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp');
 
 const env = (name, fallback = '') => process.env[name] ?? fallback;
 const asInt = (value, fallback) => {
   const n = Number.parseInt(String(value ?? ''), 10);
   return Number.isFinite(n) ? n : fallback;
 };
+
+const defaultYtDlpBin = process.env.YT_DLP_BIN
+  ?? (existsSync(localYtDlpPath) ? localYtDlpPath : 'yt-dlp');
 
 export const config = {
   app: {
@@ -36,7 +47,7 @@ export const config = {
     pinnedHosts: env('PINNED_HOSTS', '').split(',').map((s) => s.trim()).filter(Boolean),
   },
   resolver: {
-    ytDlpBin: env('YT_DLP_BIN', 'yt-dlp'),
+    ytDlpBin: defaultYtDlpBin,
     ytCookiesFile: env('YT_COOKIES_FILE', ''),
   },
 };
