@@ -41,6 +41,10 @@ Health endpoint: `http://localhost:3099/healthz`
 
 See `.env.example` for all options.
 
+## Home Assistant Add-on packaging
+
+A production-oriented Home Assistant add-on packaging scaffold is available in `home-assistant-addons/yt-cast-audio-bridge/`.
+
 ## Troubleshooting
 
 See `docs/troubleshooting.md`.
