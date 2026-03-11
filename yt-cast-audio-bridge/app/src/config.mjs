@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { existsSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -40,7 +41,30 @@ function interfacePenalty(iface) {
   return 1;
 }
 
-function candidateSort(a, b) {
+function getDefaultRouteInterface() {
+  if (process.platform !== 'linux') return '';
+  try {
+    const routeTable = readFileSync('/proc/net/route', 'utf8');
+    const lines = routeTable.split(/\r?\n/).slice(1);
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      const columns = line.trim().split(/\s+/);
+      const [iface = '', destination = '', flagsHex = '0'] = columns;
+      const hasGatewayFlag = (Number.parseInt(flagsHex, 16) & 0x2) === 0x2;
+      if (destination === '00000000' && hasGatewayFlag && iface) return iface;
+    }
+  } catch {
+    // Best-effort only. Fall back to pure interface scoring when unavailable.
+  }
+  return '';
+}
+
+function candidateSort(a, b, preferredInterface = '') {
+  if (preferredInterface) {
+    const preferredDelta = Number(b.iface === preferredInterface) - Number(a.iface === preferredInterface);
+    if (preferredDelta !== 0) return preferredDelta;
+  }
+
   const privateDelta = Number(isPrivateLanRange(b.address)) - Number(isPrivateLanRange(a.address));
   if (privateDelta !== 0) return privateDelta;
 
@@ -51,6 +75,7 @@ function candidateSort(a, b) {
 }
 
 function autodetectDialBinding() {
+  const defaultRouteInterface = getDefaultRouteInterface();
   const candidates = [];
   for (const [iface, addresses] of Object.entries(os.networkInterfaces())) {
     for (const entry of addresses ?? []) {
@@ -59,11 +84,12 @@ function autodetectDialBinding() {
     }
   }
 
-  candidates.sort(candidateSort);
+  candidates.sort((a, b) => candidateSort(a, b, defaultRouteInterface));
   const first = candidates[0] ?? null;
   return {
     detectedAddress: first?.address ?? '',
     detectedInterface: first?.iface ?? '',
+    defaultRouteInterface,
     candidateCount: candidates.length,
   };
 }
@@ -95,6 +121,7 @@ export const config = {
     bindToInterfaces,
     autoDetectedAddress: autoDialBinding.detectedAddress,
     autoDetectedInterface: autoDialBinding.detectedInterface,
+    autoDetectedDefaultRouteInterface: autoDialBinding.defaultRouteInterface,
     autoDetectedCandidateCount: autoDialBinding.candidateCount,
   },
   discovery: {
