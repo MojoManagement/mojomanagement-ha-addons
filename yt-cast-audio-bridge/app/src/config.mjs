@@ -25,6 +25,31 @@ function isCandidateLanIpv4(entry) {
   return true;
 }
 
+function isPrivateLanRange(address) {
+  return address.startsWith('10.')
+    || address.startsWith('192.168.')
+    || /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(address);
+}
+
+function interfacePenalty(iface) {
+  const name = String(iface ?? '').toLowerCase();
+  if (!name) return 2;
+  if (/^(docker|br-|veth|cni|flannel|kube|virbr|tailscale|wg|zt|tun|tap)/.test(name)) return 3;
+  if (/^(lo|loopback)/.test(name)) return 4;
+  if (/^(eth|en|wlan|wl|lan)/.test(name)) return 0;
+  return 1;
+}
+
+function candidateSort(a, b) {
+  const privateDelta = Number(isPrivateLanRange(b.address)) - Number(isPrivateLanRange(a.address));
+  if (privateDelta !== 0) return privateDelta;
+
+  const ifaceDelta = interfacePenalty(a.iface) - interfacePenalty(b.iface);
+  if (ifaceDelta !== 0) return ifaceDelta;
+
+  return a.iface.localeCompare(b.iface) || a.address.localeCompare(b.address);
+}
+
 function autodetectDialBinding() {
   const candidates = [];
   for (const [iface, addresses] of Object.entries(os.networkInterfaces())) {
@@ -34,7 +59,7 @@ function autodetectDialBinding() {
     }
   }
 
-  candidates.sort((a, b) => a.iface.localeCompare(b.iface) || a.address.localeCompare(b.address));
+  candidates.sort(candidateSort);
   const first = candidates[0] ?? null;
   return {
     detectedAddress: first?.address ?? '',
