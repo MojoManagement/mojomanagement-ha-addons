@@ -1,0 +1,34 @@
+{
+  "name": "yt-cast-audio-bridge",
+  "version": "0.1.0-beta.1",
+  "description": "Virtual YouTube receivers that forward playback to Cast audio devices.",
+  "type": "module",
+  "bin": {
+    "yt-cast-audio-bridge": "src/index.mjs"
+  },
+  "scripts": {
+    "start": "node src/index.mjs",
+    "dev": "node --watch src/index.mjs",
+    "lint": "for f in src/*.mjs; do node --check \"$f\"; done",
+    "test": "node --test",
+    "smoke": "node --check src/index.mjs",
+    "postinstall": "node scripts/postinstall-yt-dlp.mjs"
+  },
+  "keywords": [
+    "youtube",
+    "chromecast",
+    "audio",
+    "bridge",
+    "receiver"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "chromecast-api": "^0.3.4",
+    "dotenv": "^16.4.5",
+    "yt-cast-receiver": "latest",
+    "yt-dlp-wrap": "^2.3.12"
+  }
+}
