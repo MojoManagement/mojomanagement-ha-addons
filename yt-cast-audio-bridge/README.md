@@ -19,6 +19,11 @@ cp .env.example .env
 npm start
 ```
 
+`npm start` and the add-on run the same application code (`app/src/index.mjs`).
+The add-on wrapper (`rootfs/usr/local/bin/run-bridge.sh`) only maps Home Assistant options into environment variables (including `DIAL_BIND_TO_ADDRESSES` and `DIAL_BIND_TO_INTERFACES`) and then starts Node.
+
+For local `npm start`, set the same variables in `.env` if you want to force a specific listener IP/interface.
+
 ## Home Assistant notes
 
 ### Netzwerk-/Port-Konfiguration (Home Assistant)

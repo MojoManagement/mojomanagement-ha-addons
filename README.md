@@ -41,6 +41,15 @@ Health endpoint: `http://localhost:3099/healthz`
 
 See `.env.example` for all options.
 
+For multi-NIC hosts (or when auto-detect chooses the wrong path), you can pin DIAL/SSDP binding explicitly in `.env`:
+
+```bash
+DIAL_BIND_TO_ADDRESSES=192.168.50.137
+DIAL_BIND_TO_INTERFACES=enp6s18
+```
+
+`npm start` and the Home Assistant add-on use the same Node entrypoint (`src/index.mjs`) and the same config parser; the add-on only injects values from `/data/options.json` into environment variables before launching Node.
+
 ## Home Assistant add-on
 
 This repository is also a Home Assistant custom add-on repository with one add-on at `yt-cast-audio-bridge/` (plus `repository.yaml` at repo root).
