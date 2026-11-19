@@ -18,7 +18,7 @@ How to use the add-on: [`yt-cast-audio-bridge/DOCS.md`](./yt-cast-audio-bridge/D
 | Path | Content |
 |---|---|
 | [`repository.yaml`](./repository.yaml) | Repository metadata for Home Assistant |
-| [`yt-cast-audio-bridge/`](./yt-cast-audio-bridge/) | Add-on packaging: `config.yaml`, `Dockerfile`, `build.yaml`, `translations/`, `DOCS.md`, `CHANGELOG.md` |
+| [`yt-cast-audio-bridge/`](./yt-cast-audio-bridge/) | Add-on packaging: `config.yaml`, `Dockerfile`, `run.sh`, `translations/`, `DOCS.md`, `CHANGELOG.md` |
 | [`yt-cast-audio-bridge/app/`](./yt-cast-audio-bridge/app) | The bridge itself (TypeScript, Node.js) with tests and the status page |
 | [`docs/`](./docs) | [Architecture](./docs/architecture.md), [troubleshooting](./docs/troubleshooting.md), [limitations](./docs/limitations.md) |
 

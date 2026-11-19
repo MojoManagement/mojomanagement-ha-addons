@@ -1,5 +1,5 @@
 name: "YT Cast Audio Bridge"
-version: "1.0.0"
+version: "1.0.1"
 slug: "yt_cast_audio_bridge"
 description: "Cast YouTube and YouTube Music to speakers that only support Cast audio"
 url: "https://github.com/MojoManagement/mojomanagement-ha-addons"

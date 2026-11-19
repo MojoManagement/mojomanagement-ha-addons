@@ -34,11 +34,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build add-on image
-        run: docker build -t yt-cast-audio-bridge:ci yt-cast-audio-bridge
+      # Home Assistant's Supervisor passes its own base image as BUILD_FROM and
+      # starts the container with Docker's init. Build and run the same way.
+      - name: Build add-on image the way the Supervisor does
+        run: docker build --build-arg BUILD_FROM=ghcr.io/home-assistant/amd64-base:latest -t yt-cast-audio-bridge:ci yt-cast-audio-bridge
       - name: Start it and wait for the health check
         run: |
-          docker run -d --name bridge -p 3099:3099 yt-cast-audio-bridge:ci
+          docker run -d --init --name bridge -p 3099:3099 yt-cast-audio-bridge:ci
           for i in $(seq 1 30); do
             if curl -fsS http://localhost:3099/healthz; then exit 0; fi
             sleep 2

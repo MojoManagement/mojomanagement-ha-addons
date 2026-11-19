@@ -1,5 +1,3 @@
-ARG BUILD_FROM=node:24-alpine
-
 # --- build stage: compile TypeScript, then keep only runtime dependencies ------
 FROM node:24-alpine AS build
 WORKDIR /build
@@ -10,7 +8,9 @@ COPY app/src ./src
 RUN npm run build && npm prune --omit=dev
 
 # --- runtime stage --------------------------------------------------------------
-FROM ${BUILD_FROM}
+# The base image is fixed on purpose. Home Assistant passes its own base image as
+# BUILD_FROM; that image has no Node.js and an entrypoint this add-on does not use.
+FROM node:24-alpine
 
 # Pinned yt-dlp release, verified against the checksums published with it.
 # The add-on keeps a newer copy in /data when "yt_dlp_auto_update" is on.
@@ -38,4 +38,5 @@ ENV NODE_ENV=production \
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
   CMD wget -q -O /dev/null "http://127.0.0.1:${HEALTH_PORT:-3099}/healthz" || exit 1
 
-CMD ["/usr/local/bin/run-bridge"]
+ENTRYPOINT ["/usr/local/bin/run-bridge"]
+CMD []

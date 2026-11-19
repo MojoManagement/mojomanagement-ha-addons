@@ -4,6 +4,11 @@
 
 - _No changes yet._
 
+## 1.0.1
+
+- Fixed: the add-on did not start in Home Assistant (`s6-overlay-suexec: fatal: can only run as pid 1`). Home Assistant builds add-ons on its own base image; the image now always uses the Node.js base it needs.
+- Removed `build.yaml`, which current Supervisor versions ignore.
+
 ## 1.0.0
 
 Complete rewrite. The add-on keeps its slug, so it updates in place; see "Upgrading" below.
