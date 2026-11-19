@@ -70,7 +70,9 @@ export class ForwardingPlayer extends Player {
 
   async #playNow(video: Video, startTime: number, generation: number): Promise<boolean> {
     try {
+      const startedAt = Date.now();
       let track = await this.#resolver.resolve(video.id);
+      const lookedUpAt = Date.now();
       if (generation !== this.#generation) return false;
       try {
         await this.#load(track, startTime);
@@ -86,7 +88,11 @@ export class ForwardingPlayer extends Player {
       if (generation !== this.#generation) return false;
       this.#track = track;
       this.lastError = '';
-      this.#log.info(`Playing "${track.title}"${track.artist ? ` by ${track.artist}` : ''}`);
+      // The timings show where the wait before the first sound comes from.
+      const seconds = (ms: number): string => (ms / 1000).toFixed(1);
+      this.#log.info(
+        `Playing "${track.title}"${track.artist ? ` by ${track.artist}` : ''} (lookup ${seconds(lookedUpAt - startedAt)} s, speaker ${seconds(Date.now() - lookedUpAt)} s)`,
+      );
       return true;
     } catch (err) {
       if (generation === this.#generation) {

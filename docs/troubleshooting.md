@@ -38,7 +38,12 @@ The quickest way around network problems is **Link with TV code** on the status 
    - SSDP: UDP 1900 to multicast `239.255.255.250`, and the unicast answers back
    - TCP to the receiver ports listed on the status page
 
-   On UniFi, enabling "mDNS" alone is not enough; SSDP must be forwarded as well.
+   Allowing traffic between the networks in the firewall is not enough. Discovery uses multicast, and routers do not pass multicast from one network to another on their own. Many routers offer an mDNS repeater but nothing for SSDP. Two general ways around it:
+
+   - Run an SSDP relay on a machine that has a network interface in both networks, for example [multicast-relay](https://github.com/alsmith/multicast-relay). Prefer a machine you maintain yourself over the router: router firmware updates tend to remove such additions.
+   - Give Home Assistant a second address in the phones' network (`ha network vlan <interface> <vlan id> ...`) and add that address to `dial_bind_to_addresses`.
+
+   If neither is possible, use **Link with TV code**.
 5. Restart the YouTube app. It caches the device list.
 
 Watching the traffic on the Home Assistant host:

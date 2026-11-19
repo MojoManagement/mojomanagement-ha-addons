@@ -4,6 +4,11 @@
 
 - _No changes yet._
 
+## 1.0.4
+
+- The log line for each started track now shows how long the YouTube lookup and the speaker took, for example `Playing "..." (lookup 3.4 s, speaker 2.1 s)`.
+- Docs: general hints for making the Cast menu work across separate networks.
+
 ## 1.0.3
 
 - New: **Link with TV code.** Each offered speaker has a button on the status page that shows a code for the YouTube app ("Link with TV code"). This links a phone through YouTube's servers and works when the phone cannot find the bridge in the Cast menu, for example from another VLAN without SSDP forwarding. Several phones can link; each remembers the speaker afterwards.
