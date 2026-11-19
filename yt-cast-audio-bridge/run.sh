@@ -12,6 +12,12 @@ cd /opt/yt-cast-audio-bridge
 
 if [ "$(id -u)" = "0" ]; then
   mkdir -p "$DATA_DIR" "$HOME" "$XDG_CACHE_HOME"
+  # Home Assistant writes the options file readable for root only. Hand the
+  # unprivileged user its own copy; it is refreshed on every start.
+  if [ -f /data/options.json ]; then
+    install -m 600 /data/options.json "$DATA_DIR/options.json"
+    export OPTIONS_FILE="$DATA_DIR/options.json"
+  fi
   chown -R bridge:bridge "$DATA_DIR"
   exec su-exec bridge:bridge node dist/main.js
 fi

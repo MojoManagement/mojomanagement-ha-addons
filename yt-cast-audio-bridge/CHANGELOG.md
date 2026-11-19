@@ -4,6 +4,10 @@
 
 - _No changes yet._
 
+## 1.0.2
+
+- Fixed: the add-on ignored its configuration and used the defaults (`Could not read /data/options.json`), because the options file is readable for root only.
+
 ## 1.0.1
 
 - Fixed: the add-on did not start in Home Assistant (`s6-overlay-suexec: fatal: can only run as pid 1`). Home Assistant builds add-ons on its own base image; the image now always uses the Node.js base it needs.

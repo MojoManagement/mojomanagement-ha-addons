@@ -40,10 +40,18 @@ jobs:
         run: docker build --build-arg BUILD_FROM=ghcr.io/home-assistant/amd64-base:latest -t yt-cast-audio-bridge:ci yt-cast-audio-bridge
       - name: Start it and wait for the health check
         run: |
-          docker run -d --init --name bridge -p 3099:3099 yt-cast-audio-bridge:ci
+          # Like the Supervisor: options file owned by root, readable for root only.
+          mkdir data
+          echo '{"bridge_name_prefix":"CI ->","log_level":"DEBUG"}' > data/options.json
+          sudo chown root:root data/options.json && sudo chmod 600 data/options.json
+          docker run -d --init --name bridge -p 3099:3099 -v "$PWD/data:/data" yt-cast-audio-bridge:ci
           for i in $(seq 1 30); do
-            if curl -fsS http://localhost:3099/healthz; then exit 0; fi
+            if curl -fsS http://localhost:3099/healthz; then break; fi
             sleep 2
           done
           docker logs bridge
-          exit 1
+          curl -fsS http://localhost:3099/healthz
+          if docker logs bridge 2>&1 | grep -q "Could not read"; then
+            echo "The add-on could not read its options file"
+            exit 1
+          fi
