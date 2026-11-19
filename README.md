@@ -1,49 +1,40 @@
 # MojoManagement Home Assistant Add-ons
 
-This is a **Home Assistant add-on repository**.
+This is a **Home Assistant add-on repository**. It contains one add-on:
 
-It currently contains **one add-on**:
-
-- [`yt-cast-audio-bridge`](./yt-cast-audio-bridge): Virtual YouTube receivers that forward playback to Cast audio devices.
+- [`yt-cast-audio-bridge`](./yt-cast-audio-bridge): cast YouTube and YouTube Music to speakers that only support Cast audio.
 
 ## Add this repository to Home Assistant
 
 1. Open **Settings → Add-ons → Add-on Store**.
 2. Open the menu (**⋮**) → **Repositories**.
-3. Add this repository URL.
-4. Refresh the store.
-5. Open the add-on `YT Cast Audio Bridge` and install it.
+3. Add `https://github.com/MojoManagement/mojomanagement-ha-addons`.
+4. Refresh the store, open **YT Cast Audio Bridge** and install it.
 
-Repository metadata is defined in [`repository.yaml`](./repository.yaml).
+How to use the add-on: [`yt-cast-audio-bridge/DOCS.md`](./yt-cast-audio-bridge/DOCS.md).
 
-## Included add-on
+## Repository layout
 
-### YT Cast Audio Bridge (`yt_cast_audio_bridge`)
+| Path | Content |
+|---|---|
+| [`repository.yaml`](./repository.yaml) | Repository metadata for Home Assistant |
+| [`yt-cast-audio-bridge/`](./yt-cast-audio-bridge/) | Add-on packaging: `config.yaml`, `Dockerfile`, `build.yaml`, `translations/`, `DOCS.md`, `CHANGELOG.md` |
+| [`yt-cast-audio-bridge/app/`](./yt-cast-audio-bridge/app) | The bridge itself (TypeScript, Node.js) with tests and the status page |
+| [`docs/`](./docs) | [Architecture](./docs/architecture.md), [troubleshooting](./docs/troubleshooting.md), [limitations](./docs/limitations.md) |
 
-- Folder: [`yt-cast-audio-bridge/`](./yt-cast-audio-bridge/)
-- Add-on config: [`yt-cast-audio-bridge/config.yaml`](./yt-cast-audio-bridge/config.yaml)
-- Runtime app source: [`yt-cast-audio-bridge/app`](./yt-cast-audio-bridge/app)
-- Health endpoint: `http://<HA-IP>:3099/healthz`
+## Development
 
-For full usage and network notes, see [`yt-cast-audio-bridge/README.md`](./yt-cast-audio-bridge/README.md).
-
-## Development (repository)
+Requires Node.js 22.12 or newer. See [CONTRIBUTING.md](./CONTRIBUTING.md) for details.
 
 ```bash
-npm install
-npm run lint
-npm test
-npm run smoke
+npm install      # installs the app's dependencies from its lockfile
+npm run check    # type check, lint and tests
+npm start        # build and run the bridge on this machine
 ```
-
-## Documentation
-
-- Architecture: [`docs/architecture.md`](./docs/architecture.md)
-- Troubleshooting: [`docs/troubleshooting.md`](./docs/troubleshooting.md)
-- Limitations: [`docs/limitations.md`](./docs/limitations.md)
 
 ## Legal
 
 - License: [`LICENSE`](./LICENSE)
 - Notice: [`NOTICE`](./NOTICE)
 - Third-party notices: [`THIRD_PARTY_NOTICES.md`](./THIRD_PARTY_NOTICES.md)
+- Security policy: [`SECURITY.md`](./SECURITY.md)

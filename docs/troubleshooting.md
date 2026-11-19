@@ -1,162 +1,86 @@
 # Troubleshooting
 
-## Receiver visible, but no play
+Open the status page first (**Open Web UI** on the add-on page). It lists every Cast device
+that was found, says why a device is not offered, and shows problems at the top.
 
-- Confirm `yt-dlp` is installed and executable, or run `npm install` to provision the local fallback in `tools/bin/yt-dlp`.
-- Ensure Cast device can reach media URL from bridge host network.
-- Check logs for `doPlay failed`.
+## No speakers on the status page
 
-## Device disappears
+The add-on does not see any Cast device.
 
-- Increase `OFFLINE_HIDE_AFTER_MS`.
-- Verify mDNS traffic is not blocked.
-- Optionally pin device via `PINNED_HOSTS`.
+- Speakers and Home Assistant must be in the same network. Across VLANs, mDNS (UDP 5353 to `224.0.0.251`) has to be forwarded or reflected.
+- Home Assistant in a VM (Proxmox, VirtualBox): the virtual network card must be **bridged** to the LAN, not NAT.
+- Several network cards: check "Address" under **Network** on the status page. If it is the wrong one, set `dial_bind_to_addresses` to the LAN address of the Home Assistant host.
+- Click **Search again** after changing something in the network.
 
-## "no session started"
+## A speaker is listed but "Not shown"
 
-Handled as benign for stop/early-volume scenarios; typically occurs before active media session exists.
+The reason is written next to it:
 
-## YouTube app stuck on old devices
+| Reason | What to do |
+|---|---|
+| Has a screen (`only_audio_like`) | Intended for TVs and displays. Turn `only_audio_like` off to offer them anyway. |
+| Matches `exclude_regex` / Does not match `include_regex` | Adjust the expression. It is matched against "name IP-address", ignoring case. |
+| Not listed in `pinned_hosts` | Add the name, IP address or Cast id, or empty the list. |
+| Speaker groups are turned off | Turn `include_groups` on. |
+| Switched off here | Use the switch on the status page. |
+| More than `max_receivers` devices | Raise `max_receivers`. |
 
-Remove stale linked TV/device entries in YouTube/Google account device management, then relaunch app.
+## Speakers are offered, but the YouTube app does not show them
 
+The phone cannot find or reach the add-on.
 
-## Crash on `chromecast-api` `status.currentTime` (TypeError)
+1. The phone must be in the same network as Home Assistant, without "client isolation" or a guest Wi-Fi.
+2. From the phone's browser open `http://<HA-IP>:3099/healthz`. If that does not load, the phone cannot reach the Home Assistant host at all.
+3. On the status page, each offered speaker has a **reachability test link**. Open that address in the phone's browser. An XML page means the receiver is reachable; the remaining problem is discovery (SSDP). No page means the TCP port is blocked between phone and Home Assistant.
+4. Across VLANs allow, from the phone network to the Home Assistant host:
+   - SSDP: UDP 1900 to multicast `239.255.255.250`, and the unicast answers back
+   - TCP to the receiver ports listed on the status page
 
-If logs show a crash like:
+   On UniFi, enabling "mDNS" alone is not enough; SSDP must be forwarded as well.
+5. Restart the YouTube app. It caches the device list.
 
-- `TypeError: Cannot read properties of undefined (reading 'currentTime')`
-- stack in `node_modules/chromecast-api/lib/device.js` near `getCurrentTime`
-
-this is a known fragile path in the upstream library when status is temporarily undefined.
-The bridge now avoids this call path and falls back to a safe position value.
-
-Operationally this means playback control remains available, but position reporting can be less precise during transient Cast status gaps.
-
-## Bridge not visible in YouTube app
-
-If logs show `Receiver started ...` but the phone app still does not list bridge devices, this is usually a network reachability/discovery issue between phone and Home Assistant host.
-
-### Required traffic (especially across VLANs / UniFi)
-
-- **mDNS**: UDP `5353` to multicast `224.0.0.251` (Bonjour).
-- **SSDP/DIAL discovery**: UDP `1900` to multicast `239.255.255.250` plus unicast replies back to the sender.
-- **DIAL app endpoints**: inbound TCP on `DIAL_BASE_PORT` and following ports (default `3000-3024` for up to 25 receivers).
-- **Health check (optional)**: TCP `3099` (`/healthz`) for diagnostics.
-
-Notes for HA OS/add-on runtime:
-
-- This add-on runs with `host_network: true`, so DIAL listeners are opened directly on the HA host network stack (not Docker bridge port publishing).
-- In practice, most issues are upstream network policy (VLAN firewall/ACL/client isolation/multicast handling), not missing Docker port mappings.
-
-Checklist:
-
-- Ensure phone and HA host are in the same L2 segment/VLAN (no client isolation/guest Wi-Fi).
-- Allow **both** discovery planes between phone VLAN and HA host VLAN: mDNS/Bonjour (`224.0.0.251:5353` UDP) **and** SSDP/DIAL (`239.255.255.250:1900` UDP).
-- Allow inbound TCP from phone subnet to HA host on DIAL ports (`DIAL_BASE_PORT` and following ports, e.g. `3000-3024` for up to 25 receivers).
-- On UniFi specifically: enabling only “mDNS” is often not enough for YouTube Cast discovery across VLANs; also allow/reflection/routing for SSDP multicast and the unicast reply path.
-- Keep add-on on host networking (required for Cast discovery).
-- Default behavior (when both bind options are empty): auto-pick a non-loopback LAN IPv4, preferring the interface used by the Linux default route (helps avoid selecting `docker0`/bridge interfaces first).
-- If Home Assistant host has multiple NICs/subnets, set `dial_bind_to_addresses` and/or `dial_bind_to_interfaces` in add-on options to force the DIAL listener onto reachable LAN interfaces (this is mainly useful when there are 2+ candidates).
-- Temporarily set `exclude_regex` empty if you suspect over-filtering.
-- Remove stale linked TV/device entries from YouTube/Google account device management and relaunch the app.
-
-Notes:
-
-- DNS is less commonly the root cause here than multicast filtering (mDNS/SSDP) or blocked TCP DIAL ports.
-- Quick verification from phone VLAN: open `http://<HA-LAN-IP>:3099/healthz` and a receiver DIAL descriptor URL with prefix, e.g. `http://<HA-LAN-IP>:3000/ytbridge/<receiver-host-slug>/ssdp/device-desc.xml` (or the first active DIAL port from logs). If these are unreachable, YouTube will not list the bridge.
-- The add-on does not provide a web UI. Use `/healthz` for status.
-
-### Common log lines that are usually normal
-
-- Repeating `Incoming message: 'noop'` and `Not handled: 'noop'` lines are expected keepalive traffic from YouTube/YouTube Music long-poll connections.
-- Occasional `RPC connection disconnected. Reconnecting...` followed by `RPC connection established.` is also normal; YouTube rotates these sessions.
-- These lines by themselves do **not** indicate a discovery problem. If the bridge is still not visible in the YouTube app, focus on mDNS/SSDP/TCP reachability checks above.
-
-
-## What to do now (practical debug checklist)
-
-If the bridge still does not appear in YouTube, use this quick sequence.
-
-1) Confirm bridge health from the same network as your phone
-
-- Open `http://<HA-IP>:3099/healthz` from a phone browser (or another client in the same VLAN/Wi-Fi).
-- If this fails, discovery will also fail. Fix routing/firewall first.
-
-2) Confirm one DIAL endpoint is reachable
-
-- Open a receiver DIAL descriptor URL with prefix, e.g. `http://<HA-IP>:3000/ytbridge/<receiver-host-slug>/ssdp/device-desc.xml` (or use the first active DIAL port from logs).
-- If `/healthz` works but this does not, TCP DIAL ports are blocked.
-
-3) Verify Home Assistant add-on networking assumptions
-
-- Add-on must run with `host_network: true`.
-- No extra Docker `ports:` mapping is required for DIAL ports in this mode.
-
-4) UniFi / VLAN checks (most common root cause)
-
-- Disable client isolation/guest isolation for test.
-- Allow mDNS (`224.0.0.251:5353/udp`) between phone VLAN and HA VLAN.
-- Allow SSDP multicast (`239.255.255.250:1900/udp`) plus unicast reply path.
-- Allow inbound TCP from phone VLAN to HA host on DIAL range (`3000-3024` by default) and health port (`3099`).
-
-5) Proxmox / VM checks
-
-- VM NIC should be bridged to LAN (not NAT-only), with multicast allowed.
-- If Linux firewall is active inside the HA host/VM, allow UDP 5353, UDP 1900, and TCP DIAL+health ports.
-- If multiple NICs/subnets exist, pin listener with add-on options `dial_bind_to_addresses` and/or `dial_bind_to_interfaces`.
-
-6) App-side sanity checks
-
-- Temporarily clear `exclude_regex` to avoid filtering out targets.
-- Remove stale linked TV/device entries in YouTube/Google account device list, then restart YouTube app.
-
-If you can share results of steps 1 and 2 (`healthz` and `device-desc.xml` reachable yes/no), you can usually identify whether this is firewall/VLAN vs. app config in under 2 minutes.
-
-### If you see `Cannot GET /ssdp/device-desc.xml`
-
-This usually means the request path is missing the configured DIAL prefix and receiver slug.
-
-- Default add-on setting is `DIAL_PREFIX_BASE=/ytbridge`.
-- Effective URL shape is: `http://<HA-IP>:<receiver-port><DIAL_PREFIX_BASE>/<receiver-host-slug>/ssdp/device-desc.xml`
-- Example: `http://ha.proxmox:3001/ytbridge/92c38ccd-66b9-de76-5de9-bb139636ae04-local/ssdp/device-desc.xml`
-
-`receiver-host-slug` is derived from host by lowercasing and replacing non-alphanumeric characters with `-`.
-
-
-### If XML opens in browser but device is still not shown in YouTube
-
-If you see the DIAL XML (`<root xmlns="urn:schemas-upnp-org:device-1-0"> ...`), that endpoint is working.
-The browser message "This XML file does not appear to have any style information" is normal and not an error.
-
-At this point, the most likely issue is SSDP discovery path (multicast M-SEARCH/NOTIFY and reply path), not HTTP serving.
-
-Quick deep checks:
-
-- Verify the add-on announces on SSDP and receives M-SEARCH from your phone subnet.
-- Prefer testing with HA host IP in URLs (`http://<HA-LAN-IP>:...`) instead of only mDNS hostnames.
-
-Linux capture examples (HA host / VM / Proxmox bridge side):
+Watching the traffic on the Home Assistant host:
 
 ```bash
-# See SSDP multicast queries/announces
-sudo tcpdump -ni any udp port 1900
-
-# See mDNS traffic
-sudo tcpdump -ni any udp port 5353
-
-# See whether phone reaches DIAL HTTP endpoint on receiver ports
-sudo tcpdump -ni any 'tcp portrange 3000-3024'
+tcpdump -ni any udp port 1900              # SSDP queries from the phone and the answers
+tcpdump -ni any udp port 5353              # mDNS
+tcpdump -ni any 'tcp portrange 3000-3024'  # the phone talking to the receivers
 ```
 
-Expected when discovery works:
+## Casting connects, but nothing plays
 
-- Phone sends SSDP `M-SEARCH` to `239.255.255.250:1900`.
-- HA host/bridge sends SSDP responses (unicast back to phone IP) and/or `NOTIFY` announcements.
-- Phone then requests the DIAL XML URL and later app endpoints.
+Look at the speaker's card on the status page ("Last playback failed: ...") and at the
+**YouTube lookup** section.
 
-If XML is reachable manually but YouTube app still shows nothing, prioritize UniFi rules for:
+- Click **Test now**. If the lookup fails, click **Update yt-dlp**. With `yt_dlp_auto_update` on this also happens automatically after repeated failures.
+- "Sign in to confirm ..." or age-restricted videos: configure `yt_cookies_file`.
+- Lookup works but the speaker stays silent: the speaker must be able to reach the internet (it downloads the audio itself). Check DNS and firewall rules for the speaker.
+- "Cast device is offline" or "Connecting to ... timed out": Home Assistant cannot reach the speaker on TCP 8009 (groups: the port the group announces).
 
-- Multicast forwarding/reflection for SSDP (not only mDNS).
-- Unicast return traffic from HA host VLAN to phone VLAN.
-- No client isolation/guest isolation on phone SSID.
+## Playback stops in the middle of a track
+
+- "Playback ended on the speaker (app-closed)" in the log: something else started playing on that speaker (Spotify, a Home Assistant TTS message, another cast).
+- "Speaker reported a media error": the add-on restarts the track once at the same position. If it happens regularly, the speaker's connection to YouTube is unstable.
+
+## A receiver cannot start ("Problem" badge)
+
+The message names the cause. The usual one is a port that is already in use on the Home
+Assistant host; the add-on then moves that speaker to the next free port by itself. If many
+ports around `dial_base_port` are taken, choose another `dial_base_port`.
+
+## Old entries in the YouTube app
+
+Entries from earlier versions or renamed speakers can be removed in the YouTube app:
+**Settings → Watch on TV → Linked devices** (wording differs between app versions).
+
+## Log lines that are normal
+
+With `log_level: DEBUG`:
+
+- `Incoming message: 'noop'` — keep-alive traffic from YouTube.
+- `RPC connection disconnected. Reconnecting...` followed by `RPC connection established.` — YouTube rotates these connections.
+
+## Reporting a problem
+
+Include the add-on version, the text of the problems shown on the status page and the log
+from the bottom of that page. Stream URLs and pairing tokens are already removed from it.

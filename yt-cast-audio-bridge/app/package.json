@@ -1,34 +1,38 @@
 {
   "name": "yt-cast-audio-bridge",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "description": "Virtual YouTube receivers that forward playback to Cast audio devices.",
   "type": "module",
-  "bin": {
-    "yt-cast-audio-bridge": "src/index.mjs"
-  },
-  "scripts": {
-    "start": "node src/index.mjs",
-    "dev": "node --watch src/index.mjs",
-    "lint": "for f in src/*.mjs; do node --check \"$f\"; done",
-    "test": "node --test",
-    "smoke": "node --check src/index.mjs",
-    "postinstall": "node scripts/postinstall-yt-dlp.mjs"
-  },
-  "keywords": [
-    "youtube",
-    "chromecast",
-    "audio",
-    "bridge",
-    "receiver"
-  ],
+  "private": true,
   "license": "MIT",
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "start": "npm run build && node --env-file-if-exists=.env dist/main.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "test": "tsc -p tsconfig.test.json && node --test \".build/test/**/*.test.js\"",
+    "check": "npm run typecheck && npm run lint && npm test",
+    "fake-speaker": "tsc -p tsconfig.test.json && node .build/test/helpers/fake-speaker.js"
   },
   "dependencies": {
-    "chromecast-api": "^0.3.4",
-    "dotenv": "^16.4.5",
-    "yt-cast-receiver": "latest",
-    "yt-dlp-wrap": "^2.3.12"
+    "castv2": "0.1.10",
+    "castv2-client": "1.2.0",
+    "multicast-dns": "7.2.5",
+    "yt-cast-receiver": "2.1.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.20.0",
+    "@types/node": "^22.13.0",
+    "eslint": "^9.20.0",
+    "typescript": "^5.8.0",
+    "typescript-eslint": "^8.24.0"
+  },
+  "overrides": {
+    "protobufjs": "7.6.6",
+    "query-string": "10.0.0",
+    "uuid": "11.1.1"
   }
 }

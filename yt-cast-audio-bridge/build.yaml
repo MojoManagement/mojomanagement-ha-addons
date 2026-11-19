@@ -1,2 +1,9 @@
+build_from:
+  aarch64: node:24-alpine
+  amd64: node:24-alpine
 args:
-  BUILD_FROM: node:20-alpine
+  YT_DLP_VERSION: "2026.10.26"
+labels:
+  org.opencontainers.image.title: "YT Cast Audio Bridge"
+  org.opencontainers.image.source: "https://github.com/MojoManagement/mojomanagement-ha-addons"
+  org.opencontainers.image.licenses: "MIT"

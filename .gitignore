@@ -4,4 +4,5 @@ logs/
 state/
 *.log
 dist/
+.build/
 coverage/

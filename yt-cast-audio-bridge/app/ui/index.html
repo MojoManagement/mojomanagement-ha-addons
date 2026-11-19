@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>YT Cast Audio Bridge</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>YT Cast Audio Bridge</h1>
+        <p id="summary" class="muted">Loading…</p>
+      </div>
+      <button id="rescan" type="button">Search again</button>
+    </header>
+
+    <section id="problems" aria-live="polite"></section>
+
+    <section>
+      <h2>Speakers</h2>
+      <p class="muted">Speakers that are switched on appear in the YouTube and YouTube Music apps under the Cast button.</p>
+      <div id="devices" class="cards"></div>
+    </section>
+
+    <section>
+      <h2>YouTube lookup</h2>
+      <dl id="ytdlp" class="facts"></dl>
+      <div class="row">
+        <button id="selftest" type="button">Test now</button>
+        <button id="update" type="button">Update yt-dlp</button>
+        <span id="action-result" class="muted" role="status"></span>
+      </div>
+    </section>
+
+    <section>
+      <h2>Network</h2>
+      <dl id="network" class="facts"></dl>
+      <p class="muted">If phones are in a different VLAN than Home Assistant, allow the ports above plus SSDP (UDP 1900) and mDNS (UDP 5353) between the two networks.</p>
+    </section>
+
+    <section>
+      <details id="log-details">
+        <summary>Recent log</summary>
+        <pre id="logs"></pre>
+      </details>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

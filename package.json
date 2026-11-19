@@ -1,18 +1,17 @@
 {
-  "name": "yt-cast-audio-bridge-repo",
+  "name": "mojomanagement-ha-addons",
   "private": true,
-  "description": "Monorepo wrapper for yt-cast-audio-bridge",
-  "workspaces": [
-    "yt-cast-audio-bridge/app"
-  ],
+  "description": "Convenience scripts for the add-ons in this repository",
   "scripts": {
-    "start": "npm run -w yt-cast-audio-bridge/app start",
-    "dev": "npm run -w yt-cast-audio-bridge/app dev",
-    "lint": "npm run -w yt-cast-audio-bridge/app lint",
-    "test": "npm run -w yt-cast-audio-bridge/app test",
-    "smoke": "npm run -w yt-cast-audio-bridge/app smoke"
+    "postinstall": "npm --prefix yt-cast-audio-bridge/app ci --no-audit --no-fund",
+    "build": "npm --prefix yt-cast-audio-bridge/app run build",
+    "start": "npm --prefix yt-cast-audio-bridge/app start",
+    "typecheck": "npm --prefix yt-cast-audio-bridge/app run typecheck",
+    "lint": "npm --prefix yt-cast-audio-bridge/app run lint",
+    "test": "npm --prefix yt-cast-audio-bridge/app test",
+    "check": "npm --prefix yt-cast-audio-bridge/app run check"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.12.0"
   }
 }

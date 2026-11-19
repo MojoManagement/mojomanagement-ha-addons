@@ -1,0 +1,59 @@
+configuration:
+  bridge_name_prefix:
+    name: Namens-Präfix
+    description: >-
+      Steht im Cast-Menü der YouTube-Apps vor jedem Lautsprechernamen,
+      zum Beispiel "Audio -> Küche". Leer lassen, um nur den Lautsprechernamen zu zeigen.
+  bridge_screen_prefix:
+    name: Präfix für verknüpfte Geräte
+    description: Namens-Präfix, wenn ein Lautsprecher per TV-Code statt über das Cast-Menü verknüpft wird.
+  only_audio_like:
+    name: Nur Lautsprecher
+    description: Cast-Geräte mit Bildschirm (Fernseher, Chromecasts, Smart Displays) ausblenden. Die können YouTube ohnehin selbst abspielen.
+  include_groups:
+    name: Lautsprechergruppen einbeziehen
+    description: Auch Gruppen anbieten, die in der Google-Home-App angelegt wurden.
+  autoplay:
+    name: Autoplay
+    description: Nach dem Ende der Warteschlange ähnliche Videos weiterspielen (wenn Autoplay in der YouTube-App an ist).
+  include_regex:
+    name: Nur passende Geräte zeigen
+    description: Optionaler regulärer Ausdruck. Nur Geräte, deren Name oder IP-Adresse passt, werden angeboten.
+  exclude_regex:
+    name: Passende Geräte ausblenden
+    description: Optionaler regulärer Ausdruck. Geräte, deren Name oder IP-Adresse passt, werden nie angeboten.
+  pinned_hosts:
+    name: Nur diese Geräte
+    description: Optionale Liste aus Gerätenamen, IP-Adressen oder Cast-IDs. Ist sie gesetzt, wird nichts anderes angeboten.
+  max_receivers:
+    name: Maximale Anzahl Lautsprecher
+    description: Obergrenze gleichzeitig angebotener Lautsprecher. Jeder belegt einen TCP-Port.
+  offline_hide_after_ms:
+    name: Offline-Lautsprecher ausblenden nach (ms)
+    description: Wie lange ein Lautsprecher, der offline gegangen ist, im Cast-Menü bleibt.
+  dial_base_port:
+    name: Erster Empfänger-Port
+    description: >-
+      Jeder angebotene Lautsprecher lauscht auf einem TCP-Port, von diesem aufwärts gezählt.
+      Handys müssen diese Ports auf dem Home-Assistant-Host erreichen können.
+  dial_bind_to_addresses:
+    name: Auf Adressen lauschen
+    description: Nur bei mehreren Netzwerkkarten nötig. IPv4-Adressen dieses Hosts, auf denen die Lautsprecher angekündigt werden. Leer = automatisch erkennen.
+  dial_bind_to_interfaces:
+    name: Auf Schnittstellen lauschen
+    description: Alternative zu den Adressen oben, zum Beispiel "enp1s0".
+  yt_dlp_auto_update:
+    name: yt-dlp aktuell halten
+    description: >-
+      Neue yt-dlp-Versionen automatisch von GitHub laden (Prüfsumme wird geprüft).
+      YouTube ändert sich oft; ohne Updates funktioniert die Wiedergabe nach einigen Wochen nicht mehr.
+  yt_cookies_file:
+    name: YouTube-Cookie-Datei
+    description: >-
+      Optionaler Pfad zu einer cookies.txt (Netscape-Format) für altersbeschränkte oder Mitglieder-Videos,
+      zum Beispiel /config/cookies.txt. /config ist der Ordner dieses Add-ons in addon_configs.
+  log_level:
+    name: Log-Level
+    description: DEBUG nur verwenden, solange ein Problem untersucht wird.
+network:
+  3099/tcp: Statusseite (über Home Assistant) und Health-Check

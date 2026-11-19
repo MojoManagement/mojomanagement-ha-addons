@@ -1,0 +1,59 @@
+configuration:
+  bridge_name_prefix:
+    name: Name prefix
+    description: >-
+      Put in front of each speaker name in the Cast menu of the YouTube apps,
+      for example "Audio -> Kitchen". Leave empty to show the plain speaker name.
+  bridge_screen_prefix:
+    name: Linked-device prefix
+    description: Name prefix used when a speaker is linked with a TV code instead of the Cast menu.
+  only_audio_like:
+    name: Speakers only
+    description: Hide Cast devices that have a screen (TVs, Chromecasts, smart displays). They can already play YouTube on their own.
+  include_groups:
+    name: Include speaker groups
+    description: Also offer speaker groups created in the Google Home app.
+  autoplay:
+    name: Autoplay
+    description: Keep playing related videos when the queue ends (if autoplay is switched on in the YouTube app).
+  include_regex:
+    name: Only show matching devices
+    description: Optional regular expression. Only devices whose name or IP address matches are offered.
+  exclude_regex:
+    name: Hide matching devices
+    description: Optional regular expression. Devices whose name or IP address matches are never offered.
+  pinned_hosts:
+    name: Only these devices
+    description: Optional list of device names, IP addresses or Cast ids. When set, nothing else is offered.
+  max_receivers:
+    name: Maximum number of speakers
+    description: Upper limit of speakers offered at the same time. Each one uses one TCP port.
+  offline_hide_after_ms:
+    name: Hide offline speakers after (ms)
+    description: How long a speaker that went offline stays in the Cast menu.
+  dial_base_port:
+    name: First receiver port
+    description: >-
+      Each offered speaker listens on one TCP port, counting up from this one.
+      Phones must be able to reach these ports on the Home Assistant host.
+  dial_bind_to_addresses:
+    name: Listen on addresses
+    description: Only needed with several network cards. IPv4 addresses of this host to announce the speakers on. Empty = detect automatically.
+  dial_bind_to_interfaces:
+    name: Listen on interfaces
+    description: Alternative to the addresses above, for example "enp1s0".
+  yt_dlp_auto_update:
+    name: Keep yt-dlp up to date
+    description: >-
+      Download new yt-dlp releases from GitHub automatically (checksum verified).
+      YouTube changes often; without updates playback stops working after some weeks.
+  yt_cookies_file:
+    name: YouTube cookies file
+    description: >-
+      Optional path to a cookies.txt (Netscape format) for age-restricted or members-only videos,
+      for example /config/cookies.txt. /config is this add-on's folder in addon_configs.
+  log_level:
+    name: Log level
+    description: Use DEBUG only while investigating a problem.
+network:
+  3099/tcp: Status page (via Home Assistant) and health check
