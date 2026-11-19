@@ -35,6 +35,10 @@ async function api(path, body) {
   return data;
 }
 
+function formatCode(code) {
+  return String(code).replace(/(\d{3})(?=\d)/g, '$1 ');
+}
+
 const STATE_LABEL = { active: 'In YouTube app', hidden: 'Not shown', offline: 'Offline', error: 'Problem', starting: 'Starting…' };
 
 function renderDevice(device, now, address) {
@@ -81,6 +85,22 @@ function renderDevice(device, now, address) {
       line = `${receiver.senders} phone${receiver.senders === 1 ? '' : 's'} connected`;
     }
     if (line) card.append(el('div', { class: 'playing', text: line }));
+
+    const pairing = el('div', { class: 'pairing' });
+    if (receiver.pairing) {
+      pairing.append(
+        el('div', {}, [el('span', { text: 'TV code: ' }), el('strong', { class: 'code', text: formatCode(receiver.pairing.code) })]),
+        el('div', { class: 'meta', text: `In the YouTube app: profile picture → Settings → Watch on TV → Link with TV code. Works from any network; several phones can use it. Shown for another ${Math.max(1, Math.round((receiver.pairing.validUntil - now) / 60000))} min.` }),
+      );
+    } else {
+      const button = el('button', { type: 'button', text: 'Link with TV code' });
+      button.addEventListener('click', () => runAction(button, 'Asking YouTube…', async () => {
+        const result = await api(`api/devices/${encodeURIComponent(device.id)}/pairing-code`, {});
+        return result.ok ? '' : `No TV code: ${result.error}`;
+      }));
+      pairing.append(button, el('span', { class: 'meta', text: ' for phones that do not find this speaker in the Cast menu' }));
+    }
+    card.append(pairing);
   }
   return card;
 }

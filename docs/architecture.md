@@ -33,6 +33,7 @@ All code is in `yt-cast-audio-bridge/app/src`.
 | `resolver/ytdlp.ts` | Video id → stream URL through `yt-dlp`, with cache and de-duplication. |
 | `resolver/updater.ts` | Picks the `yt-dlp` binary and keeps a verified copy up to date. |
 | `bridge/player.ts` | Implements the receiver library's player on top of `CastLink` and the resolver. |
+| `bridge/pairing.ts` | Time-limited "TV code" for linking phones that cannot discover the bridge. |
 | `bridge/receiver.ts` | One virtual YouTube receiver for one speaker. |
 | `bridge/supervisor.ts` | Decides which speakers get a receiver, starts and stops them, assigns ports, retries failures. |
 | `state.ts` | JSON state file (ports, switched-off speakers, pairing data) with atomic writes. |

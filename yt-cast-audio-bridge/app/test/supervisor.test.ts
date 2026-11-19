@@ -47,8 +47,9 @@ class FakeReceiver implements ReceiverHandle {
   }
   async stop(): Promise<void> { this.stopped = true; }
   snapshot(): ReceiverSnapshot {
-    return { port: this.spec.port, displayName: this.spec.displayName, senders: this.senders, nowPlaying: null, lastError: '' };
+    return { port: this.spec.port, displayName: this.spec.displayName, senders: this.senders, nowPlaying: null, lastError: '', pairing: null };
   }
+  async requestPairingCode() { return { code: '123456789012', validUntil: 1 }; }
   onTerminated(listener: (reason: string) => void): void { this.terminated = listener; }
 }
 
@@ -210,6 +211,20 @@ test('max_receivers limits the number of receivers and says so', async () => {
     assert.match(t.stateOf('2')?.reason ?? '', /max_receivers/);
     await t.supervisor.stopAll();
     assert.equal(t.created[0]?.stopped, true);
+  } finally {
+    await t.cleanup();
+  }
+});
+
+test('a TV code is only available for speakers that are offered', async () => {
+  const t = await setup();
+  try {
+    t.registry.upsert(speaker('1'));
+    t.registry.upsert(speaker('2', { capabilities: 5 }));
+    await t.supervisor.reconcile();
+    assert.deepEqual(await t.supervisor.requestPairingCode('1'), { code: '123456789012', validUntil: 1 });
+    await assert.rejects(t.supervisor.requestPairingCode('2'), /not offered/);
+    await assert.rejects(t.supervisor.requestPairingCode('unknown'), /not offered/);
   } finally {
     await t.cleanup();
   }

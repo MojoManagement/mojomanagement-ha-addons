@@ -180,6 +180,13 @@ async function main(): Promise<void> {
         supervisor.setEnabled(id, enabled);
         await supervisor.reconcile();
       },
+      requestPairingCode: async (id) => {
+        try {
+          return { ok: true, ...(await supervisor.requestPairingCode(id)) };
+        } catch (err) {
+          return { ok: false, error: errorMessage(err) };
+        }
+      },
       rescan: async () => {
         discovery.query();
         await supervisor.reconcile();

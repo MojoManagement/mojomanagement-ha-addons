@@ -28,6 +28,7 @@ const server = createHttpServer({
       if (id === 'boom') throw new Error('secret internals');
       calls.push(`${id}:${enabled}`);
     },
+    requestPairingCode: async (id) => ({ ok: true, code: '123456789012', device: id }),
     rescan: async () => { calls.push('rescan'); },
     updateYtDlp: async () => ({ ok: true }),
     selfTest: async () => ({ ok: true }),
@@ -66,6 +67,8 @@ test('status and actions work, bad input is rejected', async () => {
   assert.equal((await post('/api/devices/abc123/enabled', { enabled: false })).status, 200);
   assert.equal((await post('/api/rescan', {})).status, 200);
   assert.deepEqual(calls, ['abc123:false', 'rescan']);
+
+  assert.deepEqual(await (await post('/api/devices/abc123/pairing-code', {})).json(), { ok: true, code: '123456789012', device: 'abc123' });
 
   assert.equal((await post('/api/devices/abc123/enabled', { enabled: 'no' })).status, 400);
   assert.equal((await post('/api/devices/abc123/enabled', '{"enabled":true}', 'text/plain')).status, 415);

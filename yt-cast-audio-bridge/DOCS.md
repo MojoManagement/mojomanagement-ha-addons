@@ -10,6 +10,18 @@
 Click **Open Web UI** on the add-on page to see which speakers were found, which of them are
 offered, and why a device is not offered. Each speaker has a switch to hide it.
 
+## Phones that do not find the speaker (other network, VLAN)
+
+The Cast menu only lists the speakers if the phone can discover the add-on via SSDP. If your
+phone is in another network than Home Assistant, link it once with a code instead:
+
+1. Open the add-on's **Web UI** and click **Link with TV code** on the speaker.
+2. In the YouTube app tap your profile picture → **Settings** → **Watch on TV** → **Link with TV code** and enter the twelve digits.
+3. The speaker now appears in that phone's Cast menu and stays there.
+
+Every phone links once; several phones can be linked. The code is shown for ten minutes and
+can be requested again at any time.
+
 ## What works
 
 - Play, pause, seek, next, previous, volume and mute from the YouTube app.

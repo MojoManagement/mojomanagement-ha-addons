@@ -4,6 +4,10 @@
 
 - _No changes yet._
 
+## 1.0.3
+
+- New: **Link with TV code.** Each offered speaker has a button on the status page that shows a code for the YouTube app ("Link with TV code"). This links a phone through YouTube's servers and works when the phone cannot find the bridge in the Cast menu, for example from another VLAN without SSDP forwarding. Several phones can link; each remembers the speaker afterwards.
+
 ## 1.0.2
 
 - Fixed: the add-on ignored its configuration and used the defaults (`Could not read /data/options.json`), because the options file is readable for root only.

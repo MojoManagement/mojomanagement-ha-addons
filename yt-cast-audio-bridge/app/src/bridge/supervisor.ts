@@ -4,6 +4,7 @@ import type { Config } from '../config.ts';
 import type { Logger } from '../logger.ts';
 import type { StateStore } from '../state.ts';
 import { backoffDelay, errorMessage } from '../util.ts';
+import type { PairingCode } from './pairing.ts';
 import type { ReceiverHandle, ReceiverSnapshot, ReceiverSpec } from './receiver.ts';
 
 export type FilterConfig = Pick<Config, 'onlyAudioLike' | 'includeGroups' | 'includeRegex' | 'excludeRegex' | 'pinnedHosts'>;
@@ -143,6 +144,13 @@ export class BridgeSupervisor {
   setEnabled(id: string, enabled: boolean): void {
     this.#options.state.update(id, { disabled: !enabled });
     this.#failures.delete(id);
+  }
+
+  /** Asks the device's receiver for a TV code. Rejects when the device is not offered right now. */
+  requestPairingCode(id: string): Promise<PairingCode> {
+    const running = this.#running.get(id);
+    if (!running) return Promise.reject(new Error('This speaker is not offered at the moment'));
+    return running.handle.requestPairingCode();
   }
 
   async stopAll(): Promise<void> {

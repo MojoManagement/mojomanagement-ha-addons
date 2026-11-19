@@ -29,6 +29,8 @@ The reason is written next to it:
 
 The phone cannot find or reach the add-on.
 
+The quickest way around network problems is **Link with TV code** on the status page: it links a phone through YouTube's servers and needs no discovery. To make the Cast menu itself work:
+
 1. The phone must be in the same network as Home Assistant, without "client isolation" or a guest Wi-Fi.
 2. From the phone's browser open `http://<HA-IP>:3099/healthz`. If that does not load, the phone cannot reach the Home Assistant host at all.
 3. On the status page, each offered speaker has a **reachability test link**. Open that address in the phone's browser. An XML page means the receiver is reachable; the remaining problem is discovery (SSDP). No page means the TCP port is blocked between phone and Home Assistant.

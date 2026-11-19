@@ -4,6 +4,7 @@ import { CastLink } from '../cast/link.ts';
 import type { Logger } from '../logger.ts';
 import type { StateStore } from '../state.ts';
 import { errorMessage } from '../util.ts';
+import { PairingWindow, type PairingCode, type PairingService } from './pairing.ts';
 import { ForwardingPlayer, type NowPlaying, type TrackResolver } from './player.ts';
 
 export interface ReceiverSpec {
@@ -24,6 +25,8 @@ export interface ReceiverSnapshot {
   senders: number;
   nowPlaying: NowPlaying | null;
   lastError: string;
+  /** TV code currently on offer for linking a phone, if somebody asked for one. */
+  pairing: PairingCode | null;
 }
 
 /** What the supervisor needs from a running virtual receiver. */
@@ -31,6 +34,8 @@ export interface ReceiverHandle {
   start(): Promise<void>;
   stop(): Promise<void>;
   snapshot(): ReceiverSnapshot;
+  /** Provides a TV code for linking a phone that cannot discover the bridge. */
+  requestPairingCode(): Promise<PairingCode>;
   /** Called once when the receiver died on its own and must be restarted. */
   onTerminated(listener: (reason: string) => void): void;
 }
@@ -74,6 +79,7 @@ export class DeviceReceiver implements ReceiverHandle {
   readonly #link: CastLink;
   readonly #player: ForwardingPlayer;
   readonly #receiver: YouTubeCastReceiver;
+  #pairing: PairingWindow | null = null;
   #terminated: ((reason: string) => void) | null = null;
   #running = false;
 
@@ -127,6 +133,7 @@ export class DeviceReceiver implements ReceiverHandle {
 
   async stop(): Promise<void> {
     this.#terminated = null;
+    this.#pairing?.stop();
     try {
       if (this.#running) await this.#receiver.stop();
     } catch (err) {
@@ -136,6 +143,12 @@ export class DeviceReceiver implements ReceiverHandle {
     await this.#link.close();
   }
 
+  requestPairingCode(): Promise<PairingCode> {
+    if (!this.#running) return Promise.reject(new Error('The receiver is not running'));
+    this.#pairing ??= new PairingWindow(this.#receiver.getPairingCodeRequestService() as unknown as PairingService, this.#log);
+    return this.#pairing.request();
+  }
+
   snapshot(): ReceiverSnapshot {
     return {
       port: this.#spec.port,
@@ -143,6 +156,7 @@ export class DeviceReceiver implements ReceiverHandle {
       senders: this.#running ? this.#receiver.getConnectedSenders().length : 0,
       nowPlaying: this.#player.nowPlaying,
       lastError: this.#player.lastError,
+      pairing: this.#pairing?.current ?? null,
     };
   }
 }

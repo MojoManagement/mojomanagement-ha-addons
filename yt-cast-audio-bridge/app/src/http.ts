@@ -31,6 +31,7 @@ export interface Health {
 
 export interface HttpActions {
   setDeviceEnabled(id: string, enabled: boolean): Promise<void>;
+  requestPairingCode(id: string): Promise<unknown>;
   rescan(): Promise<void>;
   updateYtDlp(): Promise<unknown>;
   selfTest(): Promise<unknown>;
@@ -128,6 +129,11 @@ export function createHttpServer(options: HttpServerOptions): http.Server {
         if (typeof body.enabled !== 'boolean') throw new HttpError(400, '"enabled" must be true or false');
         await options.actions.setDeviceEnabled(deviceMatch[1], body.enabled);
         sendJson(res, 200, { ok: true });
+        return;
+      }
+      const pairingMatch = /^\/api\/devices\/([a-z0-9._-]{1,80})\/pairing-code$/i.exec(pathname);
+      if (pairingMatch?.[1]) {
+        sendJson(res, 200, await options.actions.requestPairingCode(pairingMatch[1]));
         return;
       }
       if (pathname === '/api/rescan') {
